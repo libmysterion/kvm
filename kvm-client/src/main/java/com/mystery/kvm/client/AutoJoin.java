@@ -2,14 +2,14 @@
 package com.mystery.kvm.client;
 
 import com.mystery.libmystery.nio.Callback;
-import com.mystery.libmystery.nio.autojoin.AutoJoinClient;
+import com.mystery.libmystery.nio.autojoin.TcpPortScanningAutoJoinClient;
 import java.net.InetSocketAddress;
 
 
-public class AutoJoin extends AutoJoinClient {
+public class AutoJoin extends TcpPortScanningAutoJoinClient {
 
     public AutoJoin(Callback<InetSocketAddress> callback) {
-        super("synergy", callback);
+        super(9934, callback);
     }
 
 
