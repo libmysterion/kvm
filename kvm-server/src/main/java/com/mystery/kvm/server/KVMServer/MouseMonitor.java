@@ -25,7 +25,7 @@ public class MouseMonitor {
         return t;
     });
     
-    private List<Callback<Point>> callbacks = new ArrayList<>();
+    private final List<Callback<Point>> callbacks = new ArrayList<>();
 
     public MouseMonitor() {
         
@@ -64,6 +64,7 @@ public class MouseMonitor {
     }
     
     public void stop(){
+        System.out.println("MouseMonitor.stop");
         this.stop = true;
     }
     

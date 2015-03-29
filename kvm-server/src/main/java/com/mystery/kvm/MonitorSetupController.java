@@ -14,6 +14,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
@@ -288,8 +289,8 @@ public class MonitorSetupController implements Initializable {
                 
                 GridMonitor gridMonitor = new GridMonitor(c.getHostName(), new Dimension(mi.getWidth(), mi.getHeight()), false);
 
-                connectedClients.add(gridMonitor);
-
+                Platform.runLater(()-> connectedClients.add(gridMonitor));
+     
                 c.onDisconnect(() -> {
                     connectedClients.remove(gridMonitor);
                     for (GridRow r : tableRows) {

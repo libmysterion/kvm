@@ -38,13 +38,16 @@ public class MouseManager {
         // what about scales? --- i think the managerthing should have done that for us
         mouseTo(transition.getHostMousePosition());
         if (transition.isInsideHost()) {
-            transparentWindow.hide();
+            if(transparentWindow!=null){
+                transparentWindow.hide();
+                transparentWindow = null;
+            }
             startMouseMonitor();
         } else {
             transparentWindow = new TransparentWindow();
             transparentWindow.addListener(cb);
             transparentWindow.show();
-
+            
             stopMouseMonitor();
         }
     }
