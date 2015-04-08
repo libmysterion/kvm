@@ -98,7 +98,6 @@ public class MainApp extends Application {
 
         });
 
-        j.start();
 // you run the client and he gives you a url to connect to a server
         // wait surely the clients outght to be the ones running a server
         // then all i do is spin up a client
@@ -161,7 +160,6 @@ public class MainApp extends Application {
 //                ex.printStackTrace();
 //            }
 //        }).start();
-
 //        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Scene.fxml"));
 //
 //        Scene scene = new Scene(root);
