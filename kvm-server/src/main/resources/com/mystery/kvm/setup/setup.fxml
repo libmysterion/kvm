@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1"  xmlns="http://javafx.com/javafx/8" fx:controller="com.mystery.kvm.setup.SetupPresenter">
+     <children>
+        <VBox id="VBox" alignment="CENTER" spacing="5.0">
+            <children>
+                <HBox fx:id="hBox" id="hBox" alignment="CENTER" spacing="5.0">
+                    <children>
+                                    
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER" spacing="5.0">
+                    <children>
+                        <Button fx:id="startButton" text="Start"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
