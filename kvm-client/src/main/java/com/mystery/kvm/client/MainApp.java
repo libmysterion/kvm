@@ -21,6 +21,9 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
 
         AutoJoin j = new AutoJoin((address) -> {
+            
+            System.out.println("joining...");
+            System.out.println(address);
             NioClient nioClient = new NioClient();
             nioClient.connect(address)
                     .onSucess(() -> {
@@ -41,6 +44,8 @@ public class MainApp extends Application {
             });
 
         });
+        
+        j.start();
 
 // you run the client and he gives you a url to connect to a server
         // wait surely the clients outght to be the ones running a server
