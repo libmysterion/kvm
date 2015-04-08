@@ -1,29 +1,28 @@
 
 package com.mystery.kvm.server.KVMServer;
 
-import com.mystery.kvm.model.Transition;
-import com.mystery.libmystery.nio.Callback;
+import com.mystery.kvm.server.model.Transition;
 import java.awt.AWTException;
 import java.awt.Point;
 import java.awt.Robot;
 
 
-public class MouseManager {
+public class InputManager {
 
     private MouseMonitor mon = new MouseMonitor();
-    private MouseLogicManagerThing managerThing;
+    private KVMServer kvm;
 
-    MouseManager(MouseLogicManagerThing managerThing) {
-        this.managerThing = managerThing;
+    InputManager(KVMServer managerThing) {
+        this.kvm = managerThing;
     }
 
-    private Callback<Point> cb = (p) -> {
-        managerThing.setMousePosition(p);  // he will deal with the scaling
-    };
-
+    private void onMouseMoved(Point p){
+        kvm.setMousePosition(p);
+    }
+    
     public final void startMouseMonitor() {
         mon = new MouseMonitor();
-        mon.onTick(cb);
+        mon.onTick(this::onMouseMoved);
         mon.start();
     }
 
@@ -35,16 +34,25 @@ public class MouseManager {
     private TransparentWindow transparentWindow;
     
     void onTransition(Transition transition) {
-        // what about scales? --- i think the managerthing should have done that for us
         mouseTo(transition.getHostMousePosition());
         if (transition.isInsideHost()) {
-            transparentWindow.hide();
+            if(transparentWindow!=null){
+                transparentWindow.hide();
+                transparentWindow = null;
+            }
             startMouseMonitor();
         } else {
             transparentWindow = new TransparentWindow();
-            transparentWindow.addListener(cb);
+           
+            transparentWindow.addMouseMoveListener(this::onMouseMoved);
+            transparentWindow.addMousePressListener((b) ->  kvm.mousePressed(b));
+            transparentWindow.addMouseReleaseListener((b) ->  kvm.mouseReleased(b));
+            transparentWindow.addKeyPressListener((k) ->  kvm.keyPressed(k));
+            transparentWindow.addKeyReleaseListener((k) ->  kvm.keyReleased(k));
+            
+            
             transparentWindow.show();
-
+            
             stopMouseMonitor();
         }
     }

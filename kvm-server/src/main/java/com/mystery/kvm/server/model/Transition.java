@@ -1,4 +1,4 @@
-package com.mystery.kvm.model;
+package com.mystery.kvm.server.model;
 
 import java.awt.Point;
 
