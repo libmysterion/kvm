@@ -1,16 +1,17 @@
 package com.mystery.kvm.client;
 
+import com.mystery.kvm.common.messages.KeyPress;
+import com.mystery.kvm.common.messages.KeyRelease;
 import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.common.messages.MouseMove;
+import com.mystery.kvm.common.messages.MousePress;
+import com.mystery.kvm.common.messages.MouseRelease;
 import com.mystery.libmystery.nio.NioClient;
 import java.awt.AWTException;
 import java.awt.Dimension;
 import java.awt.Robot;
 import java.awt.Toolkit;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.awt.event.InputEvent;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.stage.Stage;
@@ -21,9 +22,6 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
 
         AutoJoin j = new AutoJoin((address) -> {
-            
-            System.out.println("joining...");
-            System.out.println(address);
             NioClient nioClient = new NioClient();
             nioClient.connect(address)
                     .onSucess(() -> {
@@ -32,7 +30,7 @@ public class MainApp extends Application {
                     }).onError((err) -> {
                         err.printStackTrace();
                     });
-            
+
             nioClient.onMessage(MouseMove.class, (msg) -> {
 
                 try {
@@ -43,10 +41,64 @@ public class MainApp extends Application {
                 }
             });
 
-        });
-        
-        j.start();
+            nioClient.onMessage(MousePress.class, (msg) -> {
 
+                try {
+                    Robot r = new Robot();
+                    switch (msg.getButton()) {
+                        case 1:
+                            r.mousePress(InputEvent.BUTTON1_MASK);  // == javafx primary
+                            break;
+                        case 2:
+                            r.mousePress(InputEvent.BUTTON2_MASK);  // = javafx secondary
+                            break;
+                        case 3:
+                            r.mousePress(InputEvent.BUTTON3_MASK);  // == javafx middle
+                    }
+                } catch (AWTException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            nioClient.onMessage(MouseRelease.class, (msg) -> {
+                try {
+                    Robot r = new Robot();
+                    switch (msg.getButton()) {
+                        case 1:
+                            r.mouseRelease(InputEvent.BUTTON1_MASK);  // == javafx primary
+                            break;
+                        case 2:
+                            r.mouseRelease(InputEvent.BUTTON2_MASK);  // = javafx secondary
+                            break;
+                        case 3:
+                            r.mouseRelease(InputEvent.BUTTON3_MASK);  // == javafx middle
+                    }
+                } catch (AWTException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            nioClient.onMessage(KeyPress.class, (msg) -> {
+                try {
+                    Robot r = new Robot();
+                    r.keyPress(msg.getKeycode());
+                } catch (AWTException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            nioClient.onMessage(KeyRelease.class, (msg) -> {
+                try {
+                    Robot r = new Robot();
+                    r.keyRelease(msg.getKeycode());
+                } catch (AWTException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+        });
+
+        j.start();
 // you run the client and he gives you a url to connect to a server
         // wait surely the clients outght to be the ones running a server
         // then all i do is spin up a client
