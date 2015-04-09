@@ -112,20 +112,31 @@ public class KVMServer {
     }
 
     private void onConnection(AsynchronousObjectSocketChannel client) {
-        if(setup!=null){
+        if (setup != null) {
             setup.connectClient(client.getHostName());
         }
-        
-        client.onMessage(MonitorInfo.class, (m)-> {
-            if (setup!=null) {
+
+        client.onMessage(MonitorInfo.class, (m) -> {
+            if (setup != null) {
                 setup.setSize(client.getHostName(), m);
             }
         });
-        client.onDisconnect(() -> this.onDisconnect(client));
+        client.onDisconnect(this::onDisconnect);
     }
 
     private void onDisconnect(AsynchronousObjectSocketChannel client) {
         setup.disconnectClient(client.getHostName());
+
+        Monitor monitor = setup.getMonitor(client.getHostName());
+
+        if (activeMonitor == monitor) {
+            this.activeMonitor.setActive(false);
+            this.activeMonitor = hostMonitor;
+            this.activeMonitor.setActive(true);
+            int w = activeMonitor.getSize().width / 2;
+            int h = activeMonitor.getSize().height / 2;
+            this.mouseManager.onTransition(new Transition(new Point(w, h), true));
+        }
     }
 
 }

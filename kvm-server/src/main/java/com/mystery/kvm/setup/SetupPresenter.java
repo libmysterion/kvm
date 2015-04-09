@@ -6,8 +6,11 @@ import com.mystery.kvm.setup.connections.ConnectionsPresenter;
 import com.mystery.kvm.setup.connections.ConnectionsView;
 import com.mystery.kvm.setup.monitors.MonitorsPresenter;
 import com.mystery.kvm.setup.monitors.MonitorsView;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -64,6 +67,13 @@ public class SetupPresenter implements Initializable {
     
     private void startButtonClicked(ActionEvent event){
         MonitorSetup config = monitorsPresenter.getConfig();
+        
+        try {
+            config.save(); // I should also save when you hit the X in the config window or Exit from the menu
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
         kvm.setConfiguration(config);
         stage.hide();
     }

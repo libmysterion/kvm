@@ -126,7 +126,7 @@ public class MonitorsPresenter implements Initializable {
     }
 
     private void onConnection(AsynchronousObjectSocketChannel client) {
-        client.onDisconnect(() -> this.onDisconnect(client));
+        client.onDisconnect(this::onDisconnect);
 
         setClientConnected(client.getHostName(), true);
     }

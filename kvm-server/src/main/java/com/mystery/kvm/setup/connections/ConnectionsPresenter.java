@@ -62,7 +62,7 @@ public class ConnectionsPresenter implements Initializable {
 
     private void onConnection(AsynchronousObjectSocketChannel client) {
         client.onMessage(MonitorInfo.class, (m) -> this.onMonitorInfo(client, m));
-        client.onDisconnect(() -> this.onDisconnect(client));
+        client.onDisconnect(this::onDisconnect);
     }
 
     private void onDisconnect(AsynchronousObjectSocketChannel client) {

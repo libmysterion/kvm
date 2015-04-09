@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -24,29 +25,28 @@ public class TransparentWindow {
     private Stage stage;
 
     public void show() {
-        System.out.println("---show+++");
+
+        KeyHook.blockWindowsKey((code) -> keyPressListeners.forEach((x) -> x.onSuccess(code)),
+                (code) -> keyReleaseListeners.forEach((x) -> x.onSuccess(code)));
+
         Platform.runLater(() -> {
-            System.out.println("RUNNING THE RUNNABLE");
             try {
                 stage = new Stage();
                 start(stage);
             } catch (Exception e) {
                 e.printStackTrace();
-
             }
         });
     }
 
     public void hide() {
-        System.out.println("----HIDE---");
+        KeyHook.unblockWindowsKey();
         Platform.runLater(() -> {
             stage.hide();
-
         });
     }
 
     private void start(Stage stage) {
-
         stage.initStyle(StageStyle.UNDECORATED);
         stage.setOpacity(0.01d);
         stage.setAlwaysOnTop(true);
@@ -65,6 +65,10 @@ public class TransparentWindow {
             moveListeners.forEach((l) -> l.onSuccess(new Point((int) e.getScreenX(), (int) e.getScreenY())));
         });
 
+        scene.setOnMouseDragged((e) -> {
+            moveListeners.forEach((l) -> l.onSuccess(new Point((int) e.getScreenX(), (int) e.getScreenY())));
+        });
+
         scene.setOnMousePressed((e) -> {
             MouseButton button = e.getButton();
             int val = button == MouseButton.PRIMARY ? 1 : button == MouseButton.SECONDARY ? 2 : button == MouseButton.MIDDLE ? 3 : 4;
@@ -77,25 +81,27 @@ public class TransparentWindow {
             mouseReleaseListeners.forEach((l) -> l.onSuccess(val));
         });
 
-        scene.setOnKeyPressed((e) -> {
-
-            int code = e.getCode().impl_getCode();   // this is probab;y about to stop working
-            keyPressListeners.forEach((x) -> x.onSuccess(code));
-
-        });
-
-        scene.setOnKeyReleased((e) -> {
-
-            int code = e.getCode().impl_getCode();   // this is probab;y about to stop working
-            keyReleaseListeners.forEach((x) -> x.onSuccess(code));
-
-        });
+        scene.setOnKeyPressed(this::keyPressed);
+        scene.setOnKeyReleased(this::keyReleased);
 
         stage.show();
         System.out.println("done window.start");
 
     }
 
+    private void keyReleased(KeyEvent e) {
+        
+        int code = e.getCode().impl_getCode();
+        System.out.println("============"+ code);
+        keyReleaseListeners.forEach((x) -> x.onSuccess(code));
+    }
+
+    private void keyPressed(KeyEvent e) { 
+       int code = e.getCode().impl_getCode();   // this is probab;y about to stop working
+       keyPressListeners.forEach((x) -> x.onSuccess(code));
+    }
+
+        
     void addMouseMoveListener(Callback<Point> cb) {
         this.moveListeners.add(cb);
     }

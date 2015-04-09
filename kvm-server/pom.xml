@@ -108,7 +108,7 @@
         </plugins>
         
         <resources>
-             <resource>
+            <resource>
                 <directory>src/main/java</directory>
                 <includes>
                     <include>**/*.fxml</include>
@@ -162,5 +162,35 @@
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
+        
+        <!--        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.1.0</version>
+        </dependency>-->
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        
+<!--        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>platform</artifactId>
+            <version>3.4.0</version>
+            <scope>compile</scope>
+        </dependency>-->
+        
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+
+
+
+        
     </dependencies>
 </project>
