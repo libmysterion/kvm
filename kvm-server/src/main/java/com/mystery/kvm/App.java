@@ -6,8 +6,6 @@ import com.mystery.libmystery.nio.MioServer;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -29,16 +27,48 @@ public class App extends Application {
     // user opens for non-initial launch
     // the setup from previous session is picked up and loaded
     // as additional clients join they slot into their alloted position in the setup
-    // when a click joins a bubble message will come from the tray to inform host user
-    // if the client joining is not configured in the setup then a diferent message should show informing the host user
-    // there will be ability to right click on a connection in the connections list to get a menu
-    // menu option will be "remove" which will disconnect the client
+    
+    // ----------todo---when a click joins a bubble message will come from the tray to inform host user
+    // ----------todo---if the client joining is not configured in the setup then a diferent message should show informing the host user
+    // ----------todo---there will be ability to right click on a connection in the connections list to get a menu
+    // ----------todo---menu option will be "remove" which will disconnect the client
     // 
+    // stability fixes
+    // prevent the stage window from showing in the taskbar
+    // be able to send alt+tab
+    // make the ui pretty -- fx-bootstrap?
+    // close hook to remove listeners from server from presenters
+    // close hook to save the monitor setup config when window closed(and apply it to the server) 
+    // ability to configure alias for monitor
+     // menu item - alias
+     // little input dialog thing to get the single field
+    // client to send hostname with the monitor info (since only host shows monitor name right, if machines swap ip's then alias would get messed up)
+    
+    
+    // client to hide mouse when not active
+    // client to use a trayicon
+    // exit menu item
+    // client to perform an eternal portscan....scan should continue on disconnect, and should loop if no server found
+    
+    // server threads bug...the app never dies on its own
+    // client might also exhibit
+    // manage thread pools from app not automanaged
+    // make server use a configured channel pool thing so i can use a cached thread pool with it
+    // 
+    // stability fixes
+    //
+    // exe wrapper
+    // make a release branch
+    
+    // version 2
     // adding ability to have dual monitor setup
     // this should allow each monitor to be treated independently still
     // so i could setup like | dual-1 | guest | dual-2 |
     // and i would need to know when the user is going between monitors and have all the screen sizes
-    // but should be sort of the same as what we got  
+    // but should be sort of the same as what we got 
+    
+    
+    
     private MioServer server;
 
     private Stage primaryStage;

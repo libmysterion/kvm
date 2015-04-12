@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -47,11 +48,21 @@ public class MonitorsPresenter implements Initializable {
     }
 
     public void setConfig(MonitorSetup config) {
+
         for (int row = 0; row < MONITOR_SETUP_GRID_SIZE; row++) {
             for (int col = 0; col < MONITOR_SETUP_GRID_SIZE; col++) {
                 Monitor monitor = config.getMonitor(col, row);
-                if (monitor != null) {                    
-                    GridMonitor gridMonitor = new GridMonitor(monitor.getHostname(), monitor.getSize(), monitor.isHost(), monitor.isConnected());
+                if (monitor != null) {
+                    boolean isConnected = monitor.isHost();
+                    if (!isConnected) {
+                        List<AsynchronousObjectSocketChannel> collect = server.getClients()
+                                .filter((c) -> c.getHostName().equals(monitor.getHostname()))
+                                .collect(Collectors.toList());
+                        if (!collect.isEmpty()) {
+                            isConnected = true;
+                        }
+                    }
+                    GridMonitor gridMonitor = new GridMonitor(monitor.getHostname(), monitor.getSize(), monitor.isHost(), isConnected);
                     this.tableModel.get(row).setCell(col, gridMonitor);
                 }
             }
@@ -83,6 +94,7 @@ public class MonitorsPresenter implements Initializable {
 
     private TableCell<GridRow, GridMonitor> getCell(TableColumn<GridRow, GridMonitor> in) {
         MonitorTableCell cell = new MonitorTableCell(this);
+        
         return cell;
     }
 
@@ -105,18 +117,22 @@ public class MonitorsPresenter implements Initializable {
             tableView.autosize();
         });
 
+        System.out.println("adding onConnection here++++");
         server.onConnection(this::onConnection);
 
     }
 
     private void setClientConnected(String hostname, boolean connected) {
         Platform.runLater(() -> {
+            System.out.println("setClientConnected:" + hostname + ":" + connected);
+                        
             for (GridRow r : tableModel) {
                 for (int column = 0; column < MONITOR_SETUP_GRID_SIZE; column++) {
 
                     GridMonitor cellValue = r.getCell(column);
 
                     if (cellValue != null && cellValue.getHostname().equals(hostname)) {
+                        System.out.println("connected for " + hostname);
                         cellValue.setConnected(connected);
                         return;
                     }
@@ -128,6 +144,8 @@ public class MonitorsPresenter implements Initializable {
     private void onConnection(AsynchronousObjectSocketChannel client) {
         client.onDisconnect(this::onDisconnect);
 
+        System.out.println("onConnection");
+        
         setClientConnected(client.getHostName(), true);
     }
 

@@ -1,6 +1,8 @@
 package com.mystery.kvm.setup.monitors;
 
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -30,6 +32,8 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
     Background dragTargetBackGround = new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY));
     Background normalBackGround = new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY));
 
+    private WeakChangeListener<Boolean> connectionPropertyChangedWeakListener;
+        
     MonitorTableCell(MonitorsPresenter presenter) {
         this.presenter = presenter;
 
@@ -42,7 +46,27 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         setOnDragEntered(this::onDragEntered);
         setOnDragDropped(this::onDragDropped);
         setOnDragDone(this::onDragDone);
-        setOnDragExited(this::onDragExited);
+        setOnDragExited(this::onDragExited);                
+        itemProperty().addListener(this::itemChanged);
+        connectionPropertyChangedWeakListener = new WeakChangeListener<Boolean>(this.connectedPropertyChanged);
+    }
+
+    
+    private void itemChanged(ObservableValue<? extends GridMonitor> observable, GridMonitor oldItem, GridMonitor newItem) {
+
+        if (newItem != null) {
+            newItem.connectedProperty().addListener(connectionPropertyChangedWeakListener);
+            
+            if (newItem.isConnected()) {
+                setConnectedGraphic();
+            } else {
+                setDisconnectedGraphic();
+            }
+
+        } else {
+            this.setGraphic(null);
+        }
+
     }
 
     private int getRow() {
@@ -127,38 +151,15 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         this.setGraphic(box);
     }
 
-    private void connectedPropertyChanged(ObservableValue<? extends Boolean> observable, boolean wasConnected, boolean isConnected) {
-        if (isConnected) {
+    
+    private ChangeListener<Boolean> connectedPropertyChanged = (ObservableValue<? extends Boolean> observable, Boolean wasConnected, Boolean isConnected) -> {
+        if (!wasConnected && isConnected) {
             setConnectedGraphic();
-        } else {
+        } else if (wasConnected && !isConnected) {
             setDisconnectedGraphic();
         }
-    }
-
-    @Override
-    protected void updateItem(GridMonitor newItem, boolean empty) {
-
-        GridMonitor oldItem = super.getItem();
-        if (oldItem !=null) {
-            oldItem.connectedProperty().removeListener(this::connectedPropertyChanged);
-        }
-        
-        super.updateItem(newItem, empty);
-
-        if (newItem != null) {
-            newItem.connectedProperty().addListener(this::connectedPropertyChanged);
-
-            if (newItem.isConnected()) {
-                setConnectedGraphic();
-            } else {
-                setDisconnectedGraphic();
-            }
-
-        } else {
-            this.setGraphic(null);
-        }
-
-    }
+    };
+    
 
     private ImageView createIcon(String path) {
         ImageView imageView = new ImageView(new Image(getClass().getResourceAsStream(path)));

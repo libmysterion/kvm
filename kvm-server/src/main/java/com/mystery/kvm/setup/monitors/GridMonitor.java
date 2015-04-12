@@ -79,5 +79,5 @@ public class GridMonitor implements Serializable {
         }        
         return this.connected;
     }
-
+    
 }

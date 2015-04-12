@@ -125,18 +125,23 @@ public class KVMServer {
     }
 
     private void onDisconnect(AsynchronousObjectSocketChannel client) {
-        setup.disconnectClient(client.getHostName());
+        
+        if (setup != null) {    // setup null if not started yet
+            
+            setup.disconnectClient(client.getHostName());
+            Monitor monitor = setup.getMonitor(client.getHostName());
 
-        Monitor monitor = setup.getMonitor(client.getHostName());
+            if (activeMonitor == monitor) {
+                this.activeMonitor.setActive(false);
+                this.activeMonitor = hostMonitor;
+                this.activeMonitor.setActive(true);
+                int w = activeMonitor.getSize().width / 2;
+                int h = activeMonitor.getSize().height / 2;
+                this.mouseManager.onTransition(new Transition(new Point(w, h), true));
+            }
 
-        if (activeMonitor == monitor) {
-            this.activeMonitor.setActive(false);
-            this.activeMonitor = hostMonitor;
-            this.activeMonitor.setActive(true);
-            int w = activeMonitor.getSize().width / 2;
-            int h = activeMonitor.getSize().height / 2;
-            this.mouseManager.onTransition(new Transition(new Point(w, h), true));
         }
+
     }
 
 }
