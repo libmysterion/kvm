@@ -14,7 +14,13 @@ public class MonitorSetup extends PersistantObject {
     private List<Monitor> monitors;
 
     public MonitorSetup() {
-        super(path);
+        super(path, true);
+        if(monitors == null){
+            monitors = new ArrayList<>();
+        }
+    }
+    public MonitorSetup(boolean load) {
+        super(path, load);
         if(monitors == null){
             monitors = new ArrayList<>();
         }

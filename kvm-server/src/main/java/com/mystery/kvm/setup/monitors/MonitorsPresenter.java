@@ -70,7 +70,8 @@ public class MonitorsPresenter implements Initializable {
     }
 
     public MonitorSetup getConfig() {
-        MonitorSetup rv = new MonitorSetup();
+        MonitorSetup rv = new MonitorSetup(false);
+        
         for (int row = 0; row < MONITOR_SETUP_GRID_SIZE; row++) {
             for (int col = 0; col < MONITOR_SETUP_GRID_SIZE; col++) {
                 GridMonitor viewModel = this.tableModel.get(row).getCell(col);

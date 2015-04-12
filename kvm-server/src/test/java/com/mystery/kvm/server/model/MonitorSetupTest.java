@@ -33,7 +33,7 @@ public class MonitorSetupTest {
     @Test
     public void testLoadingFromDisk() throws IOException {
         
-          MonitorSetup s = new MonitorSetup();
+          MonitorSetup s = new MonitorSetup(false);
           int x = 4;
           int y = 5;
           boolean connected = true;
@@ -45,7 +45,7 @@ public class MonitorSetupTest {
           s.save();
           
           
-          MonitorSetup t = new MonitorSetup();
+          MonitorSetup t = new MonitorSetup(true);
           assertNotNull(t.getMonitor("hello"));
           
           assertEquals(t.getMonitor("hello").getGridX(), x);
