@@ -2,6 +2,8 @@ package com.mystery.kvm.setup.connections;
 
 import com.mystery.kvm.setup.monitors.GridMonitor;
 import com.mystery.kvm.setup.monitors.MonitorTableCell;
+import javafx.event.EventHandler;
+import javafx.event.WeakEventHandler;
 import javafx.scene.control.ListCell;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
@@ -11,13 +13,13 @@ import javafx.scene.input.TransferMode;
 
 public class ConnectionsListCell extends ListCell<GridMonitor> {
 
-    
+     
     private ConnectionsPresenter presenter;
 
     ConnectionsListCell(ConnectionsPresenter presenter) {
         this.presenter = presenter;
-        setOnDragDetected(this::onDragDetected);
-        setOnDragDone(this::onDragDone);
+        setOnDragDetected(new WeakEventHandler<>(this.onDragDetected));
+        setOnDragDone(new WeakEventHandler<>(this.onDragDone));
     }
 
     @Override
@@ -30,7 +32,7 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
         }
     }
 
-    private void onDragDetected(MouseEvent event) {
+    private EventHandler<MouseEvent> onDragDetected = (MouseEvent event) -> {
         // a drag event is starting with this as the source
         if (getItem() != null) {
             Dragboard db = startDragAndDrop(TransferMode.MOVE);
@@ -40,12 +42,12 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
             db.setContent(content);
             event.consume();
         }
-    }
+    };
 
-    private void onDragDone(DragEvent event) {
+    private EventHandler<DragEvent> onDragDone = (DragEvent event)->{
         if (event.getAcceptedTransferMode() == TransferMode.MOVE) {
             presenter.remove(getIndex());
         }
-    }
+    };
 
 }

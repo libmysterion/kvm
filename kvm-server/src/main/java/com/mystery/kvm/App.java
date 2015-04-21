@@ -2,6 +2,7 @@ package com.mystery.kvm;
 
 import com.airhacks.afterburner.injection.Injector;
 import com.mystery.kvm.setup.SetupView;
+import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.nio.MioServer;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
@@ -57,10 +58,26 @@ public class App extends Application {
     // 
     // stability fixes
     //
-    // exe wrapper
-    // make a release branch
+    // exe wrapper to include a private jre in the dist
+    // ---admin mode launcher----
+    // installer should have option to start client on machine startup (we need that since same installer used for host)
+    // if the user declined then it makes sense to have that function available somewhere(not sure how to do that since don know what it is yet)
+    // so i wont be able to do from java;thats for sure
+    // since it should be an exe on its own(or .bat or whatever) maybe the java can run it with Runtime.getRuntime.exec
+    // failing that (maybe) a start menu item for[Run client on startup]
+    // would need to come with corresponding [remove client run on startup]
+ 
+    // the goal is to have the UAC popop fire once on installation
+    // then on machine startup i want to start the client in admin mode without the UAC popup
+        // this should create a task like in these articles...
+    // see also - https://www.raymond.cc/blog/task-scheduler-bypass-uac-prompt/
+    // see also 2 - http://www.howtogeek.com/howto/windows-vista/create-administrator-mode-shortcuts-without-uac-prompts-in-windows-vista/
+    
+    
+// make a release branch
     
     // version 2
+    // client-side mouse "smoothing" whenever you get told to mouseTo somewhere do it in stages to prevent cursor jump
     // adding ability to have dual monitor setup
     // this should allow each monitor to be treated independently still
     // so i could setup like | dual-1 | guest | dual-2 |
@@ -72,6 +89,7 @@ public class App extends Application {
     private MioServer server;
 
     private Stage primaryStage;
+    private EventEmitter emitter;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -87,9 +105,16 @@ public class App extends Application {
         Injector.setModelOrService(MioServer.class, server);
         Injector.setModelOrService(Stage.class, primaryStage);
 
+        emitter = new EventEmitter();
+        Injector.setModelOrService(EventEmitter.class, emitter);
         
         SwingUtilities.invokeLater(this::addAppToTray);
 
+        primaryStage.setOnHidden((c)-> {
+            System.out.println("onHidden");
+            emitter.emit("stage.hide", null);
+        });
+        
         showSetupView();
 
         startApplicationServer();

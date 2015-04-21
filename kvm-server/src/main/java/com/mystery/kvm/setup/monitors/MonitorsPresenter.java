@@ -2,7 +2,10 @@ package com.mystery.kvm.setup.monitors;
 
 import com.mystery.kvm.server.model.Monitor;
 import com.mystery.kvm.server.model.MonitorSetup;
+import com.mystery.libmystery.event.WeakHandler;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
+import com.mystery.libmystery.nio.ConnectionHandler;
+import com.mystery.libmystery.nio.DisconnectHandler;
 import com.mystery.libmystery.nio.MioServer;
 import java.net.URL;
 import java.util.ArrayList;
@@ -26,8 +29,6 @@ public class MonitorsPresenter implements Initializable {
     @Inject
     private int MONITOR_SETUP_GRID_SIZE;
 
-//    @Inject
-//    private MouseMover mouseMover;
     @FXML
     private TableView tableView;
 
@@ -71,7 +72,7 @@ public class MonitorsPresenter implements Initializable {
 
     public MonitorSetup getConfig() {
         MonitorSetup rv = new MonitorSetup(false);
-        
+
         for (int row = 0; row < MONITOR_SETUP_GRID_SIZE; row++) {
             for (int col = 0; col < MONITOR_SETUP_GRID_SIZE; col++) {
                 GridMonitor viewModel = this.tableModel.get(row).getCell(col);
@@ -95,7 +96,7 @@ public class MonitorsPresenter implements Initializable {
 
     private TableCell<GridRow, GridMonitor> getCell(TableColumn<GridRow, GridMonitor> in) {
         MonitorTableCell cell = new MonitorTableCell(this);
-        
+
         return cell;
     }
 
@@ -119,14 +120,14 @@ public class MonitorsPresenter implements Initializable {
         });
 
         System.out.println("adding onConnection here++++");
-        server.onConnection(this::onConnection);
+        server.onConnection(new WeakHandler<>(this.onConnection));
 
     }
 
     private void setClientConnected(String hostname, boolean connected) {
         Platform.runLater(() -> {
             System.out.println("setClientConnected:" + hostname + ":" + connected);
-                        
+
             for (GridRow r : tableModel) {
                 for (int column = 0; column < MONITOR_SETUP_GRID_SIZE; column++) {
 
@@ -142,16 +143,13 @@ public class MonitorsPresenter implements Initializable {
         });
     }
 
-    private void onConnection(AsynchronousObjectSocketChannel client) {
-        client.onDisconnect(this::onDisconnect);
-
-        System.out.println("onConnection");
-        
+    private final ConnectionHandler onConnection = (AsynchronousObjectSocketChannel client) -> {
+        client.onDisconnect(new WeakHandler<>(this.onDisconnect));
         setClientConnected(client.getHostName(), true);
-    }
+    };
 
-    private void onDisconnect(AsynchronousObjectSocketChannel client) {
+    private final DisconnectHandler onDisconnect = (AsynchronousObjectSocketChannel client) -> {
         setClientConnected(client.getHostName(), false);
-    }
+    };
 
 }

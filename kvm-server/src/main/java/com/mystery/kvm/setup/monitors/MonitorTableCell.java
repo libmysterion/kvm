@@ -32,8 +32,6 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
     Background dragTargetBackGround = new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY));
     Background normalBackGround = new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY));
 
-    private WeakChangeListener<Boolean> connectionPropertyChangedWeakListener;
-        
     MonitorTableCell(MonitorsPresenter presenter) {
         this.presenter = presenter;
 
@@ -48,14 +46,13 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         setOnDragDone(this::onDragDone);
         setOnDragExited(this::onDragExited);                
         itemProperty().addListener(this::itemChanged);
-        connectionPropertyChangedWeakListener = new WeakChangeListener<Boolean>(this.connectedPropertyChanged);
     }
 
     
     private void itemChanged(ObservableValue<? extends GridMonitor> observable, GridMonitor oldItem, GridMonitor newItem) {
 
         if (newItem != null) {
-            newItem.connectedProperty().addListener(connectionPropertyChangedWeakListener);
+            newItem.connectedProperty().addListener(new WeakChangeListener<>(connectedPropertyChanged));
             
             if (newItem.isConnected()) {
                 setConnectedGraphic();

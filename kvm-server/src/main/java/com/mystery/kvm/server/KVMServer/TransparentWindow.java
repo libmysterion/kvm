@@ -90,9 +90,8 @@ public class TransparentWindow {
     }
 
     private void keyReleased(KeyEvent e) {
-        
         int code = e.getCode().impl_getCode();
-        System.out.println("============"+ code);
+        System.out.println("keyReleased:" + code);
         keyReleaseListeners.forEach((x) -> x.onSuccess(code));
     }
 
