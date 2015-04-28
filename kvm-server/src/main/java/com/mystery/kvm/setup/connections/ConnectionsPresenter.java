@@ -4,6 +4,7 @@ import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.server.model.MonitorSetup;
 import com.mystery.kvm.setup.monitors.GridMonitor;
 import com.mystery.kvm.setup.monitors.MonitorTableCell;
+import com.mystery.kvm.tray.TrayMessage;
 import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.event.Handler;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
@@ -15,6 +16,7 @@ import com.mystery.libmystery.event.WeakDualHandler;
 import com.mystery.libmystery.event.WeakHandler;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -43,7 +45,14 @@ public class ConnectionsPresenter implements Initializable {
     private EventEmitter emitter;
 
     private final ObservableList<GridMonitor> availableMonitors = FXCollections.observableArrayList();
+    
+    @Inject
+    private String newMonitorBalloonHeader;
+    
+    @Inject
+    private String newMonitorBalloonText;
 
+        
     private MonitorSetup monitorSetup;
 
     @Override
@@ -82,7 +91,8 @@ public class ConnectionsPresenter implements Initializable {
             // if hes not in the setup/table already
             if (!this.monitorSetup.hasHost(client.getHostName())) {
                 // then add hime to the listview
-                availableMonitors.add(new GridMonitor(client.getHostName(), new Dimension(m.getWidth(), m.getHeight()), false, true));
+                availableMonitors.add(new GridMonitor(client.getHostName(), new Dimension(m.getWidth(), m.getHeight()), false, true));               
+                emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, newMonitorBalloonText, TrayIcon.MessageType.INFO));
             }
         });
 

@@ -96,10 +96,9 @@ public class MonitorSetup extends PersistantObject {
         List<Monitor> collect = monitors.stream()
                 .filter((m) -> m.getHostname().equals(hostname))
                 .collect(Collectors.toList());
-
         return (!collect.isEmpty());
     }
-
+    
     public Dimension getSize(String hostname) {
         List<Monitor> collect = monitors.stream()
                 .filter((m) -> m.getHostname().equals(hostname))

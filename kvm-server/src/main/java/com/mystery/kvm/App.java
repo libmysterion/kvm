@@ -2,16 +2,14 @@ package com.mystery.kvm;
 
 import com.airhacks.afterburner.injection.Injector;
 import com.mystery.kvm.setup.SetupView;
+import com.mystery.kvm.tray.TrayPresenter;
 import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.nio.MioServer;
-import java.awt.SystemTray;
-import java.awt.TrayIcon;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 
 public class App extends Application {
@@ -28,13 +26,12 @@ public class App extends Application {
     // user opens for non-initial launch
     // the setup from previous session is picked up and loaded
     // as additional clients join they slot into their alloted position in the setup
-    
-    // ----------todo---when a click joins a bubble message will come from the tray to inform host user
-    // ----------todo---if the client joining is not configured in the setup then a diferent message should show informing the host user
+    // when a client joins a bubble message will come from the tray to inform host user
+    // if the client joining is not configured in the setup then a diferent message should show informing the host user
     // ----------todo---there will be ability to right click on a connection in the connections list to get a menu
     // ----------todo---menu option will be "remove" which will disconnect the client
     // 
-    // stability fixes
+    // stability fixes ---mostly done still need to look at threads on exit issue... i think its mostly the autojoin pool..wait thats client..
     // prevent the stage window from showing in the taskbar
     // be able to send alt+tab
     // make the ui pretty -- fx-bootstrap?
@@ -105,22 +102,26 @@ public class App extends Application {
         Injector.setModelOrService(MioServer.class, server);
         Injector.setModelOrService(Stage.class, primaryStage);
 
-        emitter = new EventEmitter();
-        Injector.setModelOrService(EventEmitter.class, emitter);
+        emitter = (EventEmitter)Injector.instantiateModelOrService(EventEmitter.class);   
+        TrayPresenter trayPresenter = (TrayPresenter)Injector.instantiateModelOrService(TrayPresenter.class);
         
-        SwingUtilities.invokeLater(this::addAppToTray);
+        
+        SwingUtilities.invokeLater(trayPresenter::addAppToTray);
 
+        emitter.on("showSetupView", this::showSetupView);
+        
+        
         primaryStage.setOnHidden((c)-> {
             System.out.println("onHidden");
             emitter.emit("stage.hide", null);
         });
         
-        showSetupView();
+        showSetupView(null);
 
         startApplicationServer();
     }
 
-    private void showSetupView() {
+    private void showSetupView(Void nul) {
         
         if (!primaryStage.isShowing()) {   // if i add any more screens i guess i just need to add a check for that
             SetupView setupView = new SetupView();
@@ -154,81 +155,7 @@ public class App extends Application {
         Injector.forgetAll();
     }
 
-    private void trayOnAction(java.awt.event.ActionEvent e) {
-        Platform.runLater(() -> {
-            showSetupView();
-        });
-    }
-
-    // this how to display a baloon mesage
-//     javax.swing.SwingUtilities.invokeLater(() ->
-//                                trayIcon.displayMessage(
-//                                        "hello",
-//                                        "The time is now " + timeFormat.format(new Date()),
-//                                        java.awt.TrayIcon.MessageType.INFO
-//                                )
-//                            );
-    //    /**
-//     * Sets up a system tray icon for the application.
-//     */
-    private void addAppToTray() {
-        try {
-            // ensure awt toolkit is initialized.
-            java.awt.Toolkit.getDefaultToolkit();
-
-            // app requires system tray support, just exit if there is no support.
-            if (!java.awt.SystemTray.isSupported()) {
-                System.out.println("No system tray support, application exiting.");
-                Platform.exit();
-            }
-
-            // set up a system tray icon.
-            SystemTray tray = SystemTray.getSystemTray();
-
-            TrayIcon trayIcon = new TrayIcon(ImageIO.read(this.getClass().getResourceAsStream("/server/icons/monitor-icon-16x16.png")));
-
-            // if the user double-clicks on the tray icon, show the setup screen
-            trayIcon.addActionListener(this::trayOnAction);
-            java.awt.MenuItem openItem = new java.awt.MenuItem("Configure");
-            openItem.addActionListener(this::trayOnAction);
-
-            // the convention for tray icons seems to be to set the default icon for opening
-            // the application stage in a bold font.
-            java.awt.Font defaultFont = java.awt.Font.decode(null);
-            java.awt.Font boldFont = defaultFont.deriveFont(java.awt.Font.BOLD);
-            openItem.setFont(boldFont);
-
-            // to really exit the application, the user must go to the system tray icon
-            // and select the exit option, this will shutdown JavaFX and remove the
-            // tray icon (removing the tray icon will also shut down AWT).
-            java.awt.MenuItem exitItem = new java.awt.MenuItem("Exit");
-            exitItem.addActionListener(event -> {
-                Platform.exit();
-                tray.remove(trayIcon);
-                try {
-                    server.close();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                
-            });
-
-            // setup the popup menu for the application.
-            final java.awt.PopupMenu popup = new java.awt.PopupMenu();
-            popup.add(openItem);
-            popup.addSeparator();
-            popup.add(exitItem);
-            trayIcon.setPopupMenu(popup);
-
-            // add the application tray icon to the system tray.
-            tray.add(trayIcon);
-            
-            
-        } catch (java.awt.AWTException | IOException e) {
-            System.out.println("Unable to init system tray");
-            e.printStackTrace();
-        }
-    }
+    
 
 //    @Override
 //    public void start(Stage stage) throws Exception {

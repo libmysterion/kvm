@@ -4,9 +4,13 @@ import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.server.model.Monitor;
 import com.mystery.kvm.server.model.MonitorSetup;
 import com.mystery.kvm.server.model.Transition;
+import com.mystery.kvm.tray.TrayMessage;
+import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.MioServer;
 import java.awt.Point;
+import java.awt.TrayIcon;
+import javafx.stage.Stage;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -23,7 +27,25 @@ public class KVMServer {
     private MioServer server;
 
     @Inject
+    private Stage configStage;
+
+    @Inject
     private MouseMessager messager;
+
+    @Inject
+    private EventEmitter emitter;
+    
+    @Inject
+    private String newMonitorBalloonHeader;
+    
+    @Inject
+    private String newMonitorBalloonText;
+    
+    @Inject
+    private String monitorReconnectBalloonHeader;
+    
+    @Inject
+    private String monitorReconnectBalloonText;
 
     @PostConstruct
     void initialise() {
@@ -112,6 +134,7 @@ public class KVMServer {
     }
 
     private void onConnection(AsynchronousObjectSocketChannel client) {
+
         if (setup != null) {
             setup.connectClient(client.getHostName());
         }
@@ -119,15 +142,24 @@ public class KVMServer {
         client.onMessage(MonitorInfo.class, (m) -> {
             if (setup != null) {
                 setup.setSize(client.getHostName(), m);
+
+                if (!configStage.isShowing()) {
+                    boolean isInGridConfig = setup.hasHost(client.getHostName());
+                    if (isInGridConfig) {
+                        emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
+                    } else {
+                        emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, newMonitorBalloonText, TrayIcon.MessageType.INFO));
+                    }
+                }
             }
         });
         client.onDisconnect(this::onDisconnect);
     }
 
     private void onDisconnect(AsynchronousObjectSocketChannel client) {
-        
+
         if (setup != null) {    // setup null if not started yet
-            
+
             setup.disconnectClient(client.getHostName());
             Monitor monitor = setup.getMonitor(client.getHostName());
 

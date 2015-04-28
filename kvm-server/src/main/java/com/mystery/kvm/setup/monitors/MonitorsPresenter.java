@@ -1,12 +1,19 @@
 package com.mystery.kvm.setup.monitors;
 
+import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.server.model.Monitor;
 import com.mystery.kvm.server.model.MonitorSetup;
+import com.mystery.kvm.tray.TrayMessage;
+import com.mystery.libmystery.event.EventEmitter;
+import com.mystery.libmystery.event.WeakDualHandler;
 import com.mystery.libmystery.event.WeakHandler;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
+import com.mystery.libmystery.nio.ClientMessageHandler;
 import com.mystery.libmystery.nio.ConnectionHandler;
 import com.mystery.libmystery.nio.DisconnectHandler;
 import com.mystery.libmystery.nio.MioServer;
+import java.awt.Dimension;
+import java.awt.TrayIcon;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +40,16 @@ public class MonitorsPresenter implements Initializable {
     private TableView tableView;
 
     @Inject
-    MioServer server;
+    private MioServer server;
+    
+    @Inject 
+    private EventEmitter emitter;
+    
+    @Inject
+    private String monitorReconnectBalloonHeader;
+    
+    @Inject
+    private String monitorReconnectBalloonText;
 
     private List<String> clients = new ArrayList<>();
 
@@ -134,8 +150,7 @@ public class MonitorsPresenter implements Initializable {
                     GridMonitor cellValue = r.getCell(column);
 
                     if (cellValue != null && cellValue.getHostname().equals(hostname)) {
-                        System.out.println("connected for " + hostname);
-                        cellValue.setConnected(connected);
+                        cellValue.setConnected(connected); 
                         return;
                     }
                 }
@@ -146,8 +161,18 @@ public class MonitorsPresenter implements Initializable {
     private final ConnectionHandler onConnection = (AsynchronousObjectSocketChannel client) -> {
         client.onDisconnect(new WeakHandler<>(this.onDisconnect));
         setClientConnected(client.getHostName(), true);
+        client.onMessage(MonitorInfo.class, new WeakDualHandler<>(this.onMonitorInfo));
     };
-
+    
+    private final ClientMessageHandler<MonitorInfo> onMonitorInfo = (client, m) -> {
+        System.out.println("onMonitorInfo - monitorsPresenter");
+        Platform.runLater(() -> {
+            if (this.getConfig().hasHost(client.getHostName())) {
+                emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
+            }
+        });
+    };
+    
     private final DisconnectHandler onDisconnect = (AsynchronousObjectSocketChannel client) -> {
         setClientConnected(client.getHostName(), false);
     };
