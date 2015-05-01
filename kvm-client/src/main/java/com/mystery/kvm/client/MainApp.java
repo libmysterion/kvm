@@ -20,8 +20,8 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-        AutoJoin j = new AutoJoin((nioClient) -> {
-
+     AutoJoin j = new AutoJoin((nioClient) -> {
+      
             Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
             nioClient.send(new MonitorInfo(size.width, size.height));
 
@@ -89,7 +89,7 @@ public class MainApp extends Application {
                     ex.printStackTrace();
                 }
             });
-
+        
         });
 
         j.start();
