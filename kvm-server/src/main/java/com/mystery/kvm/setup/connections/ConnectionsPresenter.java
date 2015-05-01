@@ -150,4 +150,9 @@ public class ConnectionsPresenter implements Initializable {
                 .forEach((gm) -> this.availableMonitors.add(gm));
     }
 
+    void disconnectClient(GridMonitor item) {
+        // server needs to expose this functionallity
+        
+    }
+
 }
