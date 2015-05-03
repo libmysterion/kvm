@@ -40,7 +40,7 @@ public class MonitorSetupTest {
           boolean active = true;
           boolean isHost = true;
           
-          s.addMonitor(new Monitor("hello", null,active, isHost,x, y, connected));
+          s.addMonitor(new Monitor("hello", null,active, isHost,x, y, connected, "alien"));
           
           s.save();
           

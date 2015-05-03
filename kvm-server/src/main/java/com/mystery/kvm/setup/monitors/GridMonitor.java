@@ -13,16 +13,22 @@ public class GridMonitor implements Serializable {
     private final boolean host;
     private transient SimpleBooleanProperty connected;
     private boolean v;
+    private String alias;
 
-    public GridMonitor(String hostname, Dimension dims, boolean host, boolean connected) {
+    public GridMonitor(String hostname, Dimension dims, boolean host, boolean connected, String alias) {
         this.hostname = hostname;
         this.size = dims;
         this.host = host;
         this.connected = new SimpleBooleanProperty(connected);
         v = connected;
         this.connected.addListener((a,o, n)-> v = n);
+        this.alias = alias;
     }
 
+    public String getAlias(){
+        return this.alias;
+    }
+    
     public boolean isConnected() {
         return connectedProperty().get();
     }

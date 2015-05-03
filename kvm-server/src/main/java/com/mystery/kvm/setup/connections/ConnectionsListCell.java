@@ -35,7 +35,7 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
     protected void updateItem(GridMonitor item, boolean empty) {
         super.updateItem(item, empty);
         if (item != null) {
-            this.setText(item.getHostname());
+            this.setText(item.getAlias());
         } else {
             this.setText(null);
         }

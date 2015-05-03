@@ -89,7 +89,8 @@ public class ConnectionsPresenter implements Initializable {
         try {
             if (this.monitorSetup.findHost() == null) { // if host monitor not added to table
                 // then add to list
-                availableMonitors.add(new GridMonitor(InetAddress.getLocalHost().getHostName(), Toolkit.getDefaultToolkit().getScreenSize(), true, true));
+                String hostHostName = InetAddress.getLocalHost().getHostName();
+                availableMonitors.add(new GridMonitor(hostHostName, Toolkit.getDefaultToolkit().getScreenSize(), true, true, hostHostName));
             }
         } catch (UnknownHostException ex) {
             ex.printStackTrace();
@@ -103,9 +104,9 @@ public class ConnectionsPresenter implements Initializable {
             // if hes not in the setup/table already
             if (!this.monitorSetup.hasHost(client.getHostName())) {
                 // then add him to the listview
-                GridMonitor gridMonitor = new GridMonitor(client.getHostName(), new Dimension(m.getWidth(), m.getHeight()), false, true);
+                GridMonitor gridMonitor = new GridMonitor(client.getHostName(), new Dimension(m.getWidth(), m.getHeight()), false, true , m.getHostName());
                availableMonitors.add(gridMonitor);
-                emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, newMonitorBalloonText, TrayIcon.MessageType.INFO));
+                emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, m.getHostName() + newMonitorBalloonText, TrayIcon.MessageType.INFO));
             }
         });
 
@@ -160,7 +161,7 @@ public class ConnectionsPresenter implements Initializable {
     public void addClients() {
         this.server.getClients()
                 .filter((c) -> this.monitorSetup.hasHost(c.getHostName()))
-                .map((c) -> new GridMonitor(c.getHostName(), this.monitorSetup.getSize(c.getHostName()), false, true))
+                .map((c) -> new GridMonitor(c.getHostName(), this.monitorSetup.getSize(c.getHostName()), false, true, this.monitorSetup.getAlias(c.getHostName())))
                 .forEach((gm) -> this.availableMonitors.add(gm));
     }
 

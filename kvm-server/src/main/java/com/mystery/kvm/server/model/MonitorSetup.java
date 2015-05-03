@@ -10,18 +10,19 @@ import java.util.stream.Collectors;
 public class MonitorSetup extends PersistantObject {
 
     static String path = "./monitors_setup";
-    
+
     private List<Monitor> monitors;
 
     public MonitorSetup() {
         super(path, true);
-        if(monitors == null){
+        if (monitors == null) {
             monitors = new ArrayList<>();
         }
     }
+
     public MonitorSetup(boolean load) {
         super(path, load);
-        if(monitors == null){
+        if (monitors == null) {
             monitors = new ArrayList<>();
         }
     }
@@ -33,7 +34,7 @@ public class MonitorSetup extends PersistantObject {
     public void setMonitors(List<Monitor> monitors) {
         this.monitors = monitors;
     }
-    
+
     public void connectClient(String hostname) {
         monitors.stream()
                 .filter((m) -> m.getHostname().equals(hostname))
@@ -98,7 +99,7 @@ public class MonitorSetup extends PersistantObject {
                 .collect(Collectors.toList());
         return (!collect.isEmpty());
     }
-    
+
     public Dimension getSize(String hostname) {
         List<Monitor> collect = monitors.stream()
                 .filter((m) -> m.getHostname().equals(hostname))
@@ -125,6 +126,14 @@ public class MonitorSetup extends PersistantObject {
         } else {
             return null;
         }
+    }
+
+    public String getAlias(String hostName) {
+        Monitor monitor = this.getMonitor(hostName);
+        if (monitor != null) {
+            return monitor.getAlias();
+        }
+        return null;
     }
 
 }

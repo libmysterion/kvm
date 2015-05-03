@@ -79,7 +79,8 @@ public class MonitorsPresenter implements Initializable {
                             isConnected = true;
                         }
                     }
-                    GridMonitor gridMonitor = new GridMonitor(monitor.getHostname(), monitor.getSize(), monitor.isHost(), isConnected);
+                    // todo needs to put the alias in th saved config probably
+                    GridMonitor gridMonitor = new GridMonitor(monitor.getHostname(), monitor.getSize(), monitor.isHost(), isConnected, monitor.getAlias());
                     this.tableModel.get(row).setCell(col, gridMonitor);
                 }
             }
@@ -93,7 +94,7 @@ public class MonitorsPresenter implements Initializable {
             for (int col = 0; col < MONITOR_SETUP_GRID_SIZE; col++) {
                 GridMonitor viewModel = this.tableModel.get(row).getCell(col);
                 if (viewModel != null) {
-                    rv.addMonitor(new Monitor(viewModel.getHostname(), viewModel.getSize(), viewModel.isHost(), viewModel.isHost(), col, row, viewModel.isConnected()));
+                    rv.addMonitor(new Monitor(viewModel.getHostname(), viewModel.getSize(), viewModel.isHost(), viewModel.isHost(), col, row, viewModel.isConnected(), viewModel.getAlias()));
                 }
             }
         }
@@ -168,7 +169,7 @@ public class MonitorsPresenter implements Initializable {
         System.out.println("onMonitorInfo - monitorsPresenter");
         Platform.runLater(() -> {
             if (this.getConfig().hasHost(client.getHostName())) {
-                emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
+                emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader,m.getHostName() +  monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
             }
         });
     };

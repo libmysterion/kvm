@@ -15,11 +15,11 @@ public class Properties {
         
         
         customProperties.put("newMonitorBalloonHeader", "New Monitor Available");
-        customProperties.put("newMonitorBalloonText", "somebody joined");
+        customProperties.put("newMonitorBalloonText", " is now available to configure.");
         
         
         customProperties.put("monitorReconnectBalloonHeader", "Monitor Reconnected");
-        customProperties.put("monitorReconnectBalloonText", "somebody joined in the config");
+        customProperties.put("monitorReconnectBalloonText", " is now available.");
         
      
         Injector.setConfigurationSource(customProperties::get);

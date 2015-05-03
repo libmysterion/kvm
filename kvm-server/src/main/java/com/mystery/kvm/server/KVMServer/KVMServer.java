@@ -146,9 +146,9 @@ public class KVMServer {
                 if (!configStage.isShowing()) {
                     boolean isInGridConfig = setup.hasHost(client.getHostName());
                     if (isInGridConfig) {
-                        emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
+                        emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, m.getHostName() + monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
                     } else {
-                        emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, newMonitorBalloonText, TrayIcon.MessageType.INFO));
+                        emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, m.getHostName() + newMonitorBalloonText, TrayIcon.MessageType.INFO));
                     }
                 }
             }

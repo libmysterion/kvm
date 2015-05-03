@@ -162,7 +162,7 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
     private void buildCellNode(ImageView icon) {
         VBox box = new VBox();
         GridMonitor item = this.getItem();
-        Label label = new Label(item.getHostname());
+        Label label = new Label(item.getAlias());
         box.setSpacing(0);
         box.getChildren().addAll(icon, label);
         box.setPrefSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);
