@@ -85,5 +85,9 @@ public class GridMonitor implements Serializable {
         }        
         return this.connected;
     }
+
+    public void setAlias(String name) {
+        this.alias = name;
+    }
     
 }

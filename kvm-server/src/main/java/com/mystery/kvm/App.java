@@ -28,19 +28,19 @@ public class App extends Application {
     // as additional clients join they slot into their alloted position in the setup
     // when a client joins a bubble message will come from the tray to inform host user
     // if the client joining is not configured in the setup then a diferent message should show informing the host user
-    // ----------todo---there will be ability to right click on a connection in the connections list to get a menu
-    // ----------todo---menu option will be "remove" which will disconnect the client
+    // there will be ability to right click on a connection in the connections list to get a menu
+    // todo---menu option will be "remove" which will disconnect the client
     // 
     // stability fixes ---mostly done still need to look at threads on exit issue... i think its mostly the autojoin pool..wait thats client..
-    // prevent the stage window from showing in the taskbar
-    // be able to send alt+tab
-    // make the ui pretty -- fx-bootstrap?
-    // close hook to remove listeners from server from presenters
-    // close hook to save the monitor setup config when window closed(and apply it to the server) 
-    // ability to configure alias for monitor
-     // menu item - alias
-     // little input dialog thing to get the single field
-    // client to send hostname with the monitor info (since only host shows monitor name right, if machines swap ip's then alias would get messed up)
+    // todo--prevent the stage window from showing in the taskbar
+    // todo-phaze2?--be able to send alt+tab
+    // todo---make the ui pretty -- fx-bootstrap?
+    // done---verify job needed---dclose hook to remove listeners from server from presenters
+    // done---close hook to save the monitor setup config when window closed(and apply it to the server) 
+    // done----ability to configure alias for monitor
+     // done---menu item - alias
+     // done----little input dialog thing to get the single field
+    // done----client to send hostname with the monitor info (since only host shows monitor name right, if machines swap ip's then alias would get messed up)
     
     
     // client to hide mouse when not active

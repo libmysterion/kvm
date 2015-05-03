@@ -2,12 +2,14 @@ package com.mystery.kvm.setup.connections;
 
 import com.mystery.kvm.setup.monitors.GridMonitor;
 import com.mystery.kvm.setup.monitors.MonitorTableCell;
+import java.util.Optional;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.event.WeakEventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -16,7 +18,6 @@ import javafx.scene.input.TransferMode;
 
 public class ConnectionsListCell extends ListCell<GridMonitor> {
 
-     
     private ConnectionsPresenter presenter;
     private final ContextMenu menu = new ContextMenu();
 
@@ -24,10 +25,14 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
         this.presenter = presenter;
         setOnDragDetected(new WeakEventHandler<>(this.onDragDetected));
         setOnDragDone(new WeakEventHandler<>(this.onDragDone));
-            
+
         MenuItem removeMenuItem = new MenuItem("Remove monitor");
-        menu.getItems().add(removeMenuItem);
+        MenuItem aliasMenuItem = new MenuItem("Rename");
+
+        menu.getItems().addAll(removeMenuItem, aliasMenuItem);
         removeMenuItem.setOnAction(new WeakEventHandler<>(this.onRemoveClientClicked));
+        aliasMenuItem.setOnAction(new WeakEventHandler<>(this.onRenameClientClicked));
+
         setContextMenu(menu);
     }
 
@@ -53,14 +58,32 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
         }
     };
 
-    private EventHandler<DragEvent> onDragDone = (DragEvent event)->{
+    private EventHandler<DragEvent> onDragDone = (DragEvent event) -> {
         if (event.getAcceptedTransferMode() == TransferMode.MOVE) {
             presenter.remove(getIndex());
         }
     };
-    
-    private EventHandler<ActionEvent> onRemoveClientClicked = (ActionEvent event)-> {
+
+    private EventHandler<ActionEvent> onRemoveClientClicked = (ActionEvent event) -> {
         this.presenter.disconnectClient(this.getItem());
+    };
+
+    private final EventHandler<ActionEvent> onRenameClientClicked = (ActionEvent event) -> {
+
+        TextInputDialog dialog = new TextInputDialog(getItem().getAlias());
+        
+        // todo set the monitor graphic
+        //dialog.setGraphic(this);
+        
+        
+        dialog.setTitle("Rename Monitor");
+        dialog.setContentText("Monitor Name:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(name -> {
+            this.getItem().setAlias(name);
+            this.setText(getItem().getAlias());
+        });
     };
 
 }

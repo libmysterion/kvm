@@ -1,6 +1,7 @@
 package com.mystery.kvm.setup.monitors;
 
 import com.mystery.libmystery.event.EventEmitter;
+import java.util.Optional;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
@@ -12,6 +13,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
@@ -63,8 +65,11 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         // we should simply move him back to the connections as if it was dragged
         
         MenuItem removeMenuItem = new MenuItem("Remove monitor");
-        menu.getItems().add(removeMenuItem);
+        MenuItem aliasMenuItem = new MenuItem("Rename");
+
+        menu.getItems().addAll(removeMenuItem, aliasMenuItem);
         removeMenuItem.setOnAction(new WeakEventHandler<>(this.onRemoveClientClicked));
+        aliasMenuItem.setOnAction(new WeakEventHandler<>(this.onRenameClientClicked));
         setContextMenu(menu);
         
     }
@@ -185,6 +190,29 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         imageView.setFitWidth(SETUP_TABLE_CELL_SIZE);
         return imageView;
     }
+    
+     private EventHandler<ActionEvent> onRenameClientClicked = (ActionEvent event) -> {
+
+        TextInputDialog dialog = new TextInputDialog(getItem().getAlias());
+        dialog.setTitle("Rename Monitor");
+        
+        // todo set the monitor graphic
+        //dialog.setGraphic(this);
+        
+        
+        dialog.setContentText("Monitor Name:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(name -> {
+            this.getItem().setAlias(name);
+            if(this.getItem().isConnected()){
+                this.setConnectedGraphic();
+            }else{
+                this.setDisconnectedGraphic();
+            }
+        });
+    };
+     
 
     private EventHandler<ActionEvent> onRemoveClientClicked = (ActionEvent event)-> {
 
