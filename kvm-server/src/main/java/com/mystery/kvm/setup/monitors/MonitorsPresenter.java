@@ -111,7 +111,7 @@ public class MonitorsPresenter implements Initializable {
     }
 
     private TableCell<GridRow, GridMonitor> getCell(TableColumn<GridRow, GridMonitor> in) {
-        MonitorTableCell cell = new MonitorTableCell(this);
+        MonitorTableCell cell = new MonitorTableCell(this, emitter);
 
         return cell;
     }

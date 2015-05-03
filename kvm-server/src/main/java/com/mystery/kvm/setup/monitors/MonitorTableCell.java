@@ -1,10 +1,16 @@
 package com.mystery.kvm.setup.monitors;
 
+import com.mystery.libmystery.event.EventEmitter;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.event.WeakEventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,12 +35,17 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
 
     private MonitorsPresenter presenter;
 
-    Background dragTargetBackGround = new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY));
-    Background normalBackGround = new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY));
+    private Background dragTargetBackGround = new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY));
+    private Background normalBackGround = new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY));
 
-    MonitorTableCell(MonitorsPresenter presenter) {
+
+    private final ContextMenu menu = new ContextMenu();
+    private EventEmitter emitter;
+    
+    MonitorTableCell(MonitorsPresenter presenter, EventEmitter emitter) {
         this.presenter = presenter;
-
+        this.emitter = emitter;
+        
         setBackground(normalBackGround);
         setPrefSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);
 
@@ -46,6 +57,16 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         setOnDragDone(this::onDragDone);
         setOnDragExited(this::onDragExited);                
         itemProperty().addListener(this::itemChanged);
+        
+
+        // a remove operation from here should not disconnect he client
+        // we should simply move him back to the connections as if it was dragged
+        
+        MenuItem removeMenuItem = new MenuItem("Remove monitor");
+        menu.getItems().add(removeMenuItem);
+        removeMenuItem.setOnAction(new WeakEventHandler<>(this.onRemoveClientClicked));
+        setContextMenu(menu);
+        
     }
 
     
@@ -165,4 +186,25 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         return imageView;
     }
 
+    private EventHandler<ActionEvent> onRemoveClientClicked = (ActionEvent event)-> {
+
+
+        emitter.emit(RemoveFromGridEvent.class, new RemoveFromGridEvent(getItem()));
+        presenter.setTableValue(getRow(), getColumn(), null);
+        
+    };
+    
+    public class RemoveFromGridEvent {
+
+        private GridMonitor item;
+        private RemoveFromGridEvent(GridMonitor item) {
+
+            this.item = item;
+        }
+        
+        public GridMonitor getMonitor(){
+            return this.item;
+        }
+        
+    }
 }

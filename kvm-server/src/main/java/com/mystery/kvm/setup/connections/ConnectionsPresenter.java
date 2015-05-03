@@ -4,6 +4,7 @@ import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.server.model.MonitorSetup;
 import com.mystery.kvm.setup.monitors.GridMonitor;
 import com.mystery.kvm.setup.monitors.MonitorTableCell;
+import com.mystery.kvm.setup.monitors.MonitorTableCell.RemoveFromGridEvent;
 import com.mystery.kvm.tray.TrayMessage;
 import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.event.Handler;
@@ -49,8 +50,7 @@ public class ConnectionsPresenter implements Initializable {
     private EventEmitter emitter;
 
     private final ObservableList<GridMonitor> availableMonitors = FXCollections.observableArrayList();
-    private final Map<AsynchronousObjectSocketChannel, GridMonitor> availableMonitorsMap = new HashMap<>();
-
+   
     @Inject
     private String newMonitorBalloonHeader;
 
@@ -71,10 +71,18 @@ public class ConnectionsPresenter implements Initializable {
         server.onConnection(new WeakHandler<>(this.onConnection));  // weak handler will allow GC and remove itself
 
         emitter.on("stage.hide", new WeakHandler<>(this.onStageHide));
+        emitter.on(RemoveFromGridEvent.class, new WeakHandler<>(this.onRemovedFromGrid));
+        
     }
 
     private final Handler<Void> onStageHide = (v) -> {
         listView.setCellFactory(null); // prevents leak
+    };
+
+    private final Handler<RemoveFromGridEvent> onRemovedFromGrid = (RemoveFromGridEvent v) -> {
+        Platform.runLater(()->{
+            availableMonitors.add(v.getMonitor());
+        });  
     };
 
     public void addHostMonitor() {
@@ -96,14 +104,13 @@ public class ConnectionsPresenter implements Initializable {
             if (!this.monitorSetup.hasHost(client.getHostName())) {
                 // then add him to the listview
                 GridMonitor gridMonitor = new GridMonitor(client.getHostName(), new Dimension(m.getWidth(), m.getHeight()), false, true);
-                availableMonitorsMap.put(client, gridMonitor);
-                availableMonitors.add(gridMonitor);
+               availableMonitors.add(gridMonitor);
                 emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, newMonitorBalloonText, TrayIcon.MessageType.INFO));
             }
         });
 
     };
-
+    
     private final ConnectionHandler onConnection = (AsynchronousObjectSocketChannel client) -> {
         client.onMessage(MonitorInfo.class, new WeakDualHandler<>(onMonitorInfo));
         client.onDisconnect(new WeakHandler<>(this.onDisconnect));
@@ -112,7 +119,7 @@ public class ConnectionsPresenter implements Initializable {
     private final DisconnectHandler onDisconnect = (AsynchronousObjectSocketChannel client) -> {
         System.out.println("++++onDisconnect======");
         Platform.runLater(() -> {
-            remove(client);
+            availableMonitors.removeIf((m) -> m.getHostname().equals(client.getHostName()));
         });
     };
 
@@ -121,30 +128,7 @@ public class ConnectionsPresenter implements Initializable {
     }
 
     void remove(int index) {
-        GridMonitor get = availableMonitors.get(index);
-        if (get != null) {
-            AsynchronousObjectSocketChannel client = keyFromValue(availableMonitorsMap, get);
-            availableMonitorsMap.remove(client);
-            availableMonitors.remove(index);
-        }
-    }
-
-    private <K, V> K keyFromValue(Map<K, V> map, V value) {
-        for (Entry<K, V> e : map.entrySet()) {
-            if (e.getValue() == value) {
-                return e.getKey();
-            }
-        }
-        return null;
-    }
-
-    void remove(AsynchronousObjectSocketChannel client) {
-        GridMonitor get = availableMonitorsMap.get(client);
-        if (get != null) {
-            availableMonitors.remove(get);
-            availableMonitorsMap.remove(client);
-            System.out.println("=======remover it all");
-        }
+        availableMonitors.remove(index);
     }
 
     private EventHandler<DragEvent> onDragOver = (DragEvent event) -> {
