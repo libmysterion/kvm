@@ -20,6 +20,10 @@ import java.awt.TrayIcon;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -45,14 +49,14 @@ public class ConnectionsPresenter implements Initializable {
     private EventEmitter emitter;
 
     private final ObservableList<GridMonitor> availableMonitors = FXCollections.observableArrayList();
-    
+    private final Map<AsynchronousObjectSocketChannel, GridMonitor> availableMonitorsMap = new HashMap<>();
+
     @Inject
     private String newMonitorBalloonHeader;
-    
+
     @Inject
     private String newMonitorBalloonText;
 
-        
     private MonitorSetup monitorSetup;
 
     @Override
@@ -90,8 +94,10 @@ public class ConnectionsPresenter implements Initializable {
 
             // if hes not in the setup/table already
             if (!this.monitorSetup.hasHost(client.getHostName())) {
-                // then add hime to the listview
-                availableMonitors.add(new GridMonitor(client.getHostName(), new Dimension(m.getWidth(), m.getHeight()), false, true));               
+                // then add him to the listview
+                GridMonitor gridMonitor = new GridMonitor(client.getHostName(), new Dimension(m.getWidth(), m.getHeight()), false, true);
+                availableMonitorsMap.put(client, gridMonitor);
+                availableMonitors.add(gridMonitor);
                 emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, newMonitorBalloonText, TrayIcon.MessageType.INFO));
             }
         });
@@ -104,8 +110,9 @@ public class ConnectionsPresenter implements Initializable {
     };
 
     private final DisconnectHandler onDisconnect = (AsynchronousObjectSocketChannel client) -> {
+        System.out.println("++++onDisconnect======");
         Platform.runLater(() -> {
-            availableMonitors.remove(new GridMonitor(client.getHostName(), null, false, false));
+            remove(client);
         });
     };
 
@@ -114,7 +121,30 @@ public class ConnectionsPresenter implements Initializable {
     }
 
     void remove(int index) {
-        availableMonitors.remove(index);
+        GridMonitor get = availableMonitors.get(index);
+        if (get != null) {
+            AsynchronousObjectSocketChannel client = keyFromValue(availableMonitorsMap, get);
+            availableMonitorsMap.remove(client);
+            availableMonitors.remove(index);
+        }
+    }
+
+    private <K, V> K keyFromValue(Map<K, V> map, V value) {
+        for (Entry<K, V> e : map.entrySet()) {
+            if (e.getValue() == value) {
+                return e.getKey();
+            }
+        }
+        return null;
+    }
+
+    void remove(AsynchronousObjectSocketChannel client) {
+        GridMonitor get = availableMonitorsMap.get(client);
+        if (get != null) {
+            availableMonitors.remove(get);
+            availableMonitorsMap.remove(client);
+            System.out.println("=======remover it all");
+        }
     }
 
     private EventHandler<DragEvent> onDragOver = (DragEvent event) -> {
@@ -151,8 +181,16 @@ public class ConnectionsPresenter implements Initializable {
     }
 
     void disconnectClient(GridMonitor item) {
-        // server needs to expose this functionallity
-        
+        try {
+            Optional<AsynchronousObjectSocketChannel> optional = server.getClients()
+                    .filter((AsynchronousObjectSocketChannel c) -> c.getHostName().equals(item.getHostname()))
+                    .findFirst();
+            if (optional.isPresent()) {
+                server.disconnectClient(optional.get());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
