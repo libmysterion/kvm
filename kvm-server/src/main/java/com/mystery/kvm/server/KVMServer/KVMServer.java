@@ -71,7 +71,7 @@ public class KVMServer {
     // this method is called continuously by the mouse manager
     void setMousePosition(Point p) {
         synchronized (setupLock) {
-            if (this.setup != null) {
+            if (this.setup != null && hostMonitor != null) {
                 try {
                     // keep the model updated always
                     DimensionScale scale = new DimensionScale(this.hostMonitor.getSize(), this.activeMonitor.getSize());

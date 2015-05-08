@@ -29,7 +29,7 @@ public class App extends Application {
     // when a client joins a bubble message will come from the tray to inform host user
     // if the client joining is not configured in the setup then a diferent message should show informing the host user
     // there will be ability to right click on a connection in the connections list to get a menu
-    // todo---menu option will be "remove" which will disconnect the client
+    // done---menu option will be "remove" which will disconnect the client
     // 
     // stability fixes ---mostly done still need to look at threads on exit issue... i think its mostly the autojoin pool..wait thats client..
     // done--prevent the stage window from showing in the taskbar
@@ -42,6 +42,13 @@ public class App extends Application {
      // done----little input dialog thing to get the single field
     // done----client to send hostname with the monitor info (since only host shows monitor name right, if machines swap ip's then alias would get messed up)
     
+    // todo ---- grid validation
+    // the host monitor is currently required, but we plan the feature for no host monitor required with just all clients
+    // the monitors need to be connected to each other, dont do this as they are added, only on start(and exit??)
+    // on exit - if we prevent user from closing its a shit UX
+    // on exit - if it does not trigger validation then the user could think its running when its not
+    // we should show a popup saying "The grid is invalid, so mouse/keyboard share will not start, are you sure you want to close?"
+    // then he can yes or no to closing
     
     // client to hide mouse when not active
     // client to use a trayicon
