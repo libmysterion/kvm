@@ -22,7 +22,7 @@ public class TransparentWindow {
     private ArrayList<Callback<Integer>> keyPressListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> keyReleaseListeners = new ArrayList<>();
 
-    private Stage stage;
+    private Stage undecoratedStage;
 
     public void show() {
 
@@ -31,8 +31,12 @@ public class TransparentWindow {
 
         Platform.runLater(() -> {
             try {
-                stage = new Stage();
-                start(stage);
+                Stage offSceeenUtilityStage = new Stage(StageStyle.UTILITY);
+                offSceeenUtilityStage.setX(Double.MAX_VALUE);
+                offSceeenUtilityStage.setY(Double.MAX_VALUE);
+                undecoratedStage = new Stage(StageStyle.UNDECORATED);
+                undecoratedStage.initOwner(offSceeenUtilityStage);
+                start(undecoratedStage);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -42,12 +46,11 @@ public class TransparentWindow {
     public void hide() {
         KeyHook.unblockWindowsKey();
         Platform.runLater(() -> {
-            stage.hide();
+            undecoratedStage.hide();
         });
     }
 
     private void start(Stage stage) {
-        stage.initStyle(StageStyle.UNDECORATED);
         stage.setOpacity(0.01d);
         stage.setAlwaysOnTop(true);
         stage.setX(0);

@@ -32,7 +32,7 @@ public class App extends Application {
     // todo---menu option will be "remove" which will disconnect the client
     // 
     // stability fixes ---mostly done still need to look at threads on exit issue... i think its mostly the autojoin pool..wait thats client..
-    // todo--prevent the stage window from showing in the taskbar
+    // done--prevent the stage window from showing in the taskbar
     // todo-phaze2?--be able to send alt+tab
     // todo---make the ui pretty -- fx-bootstrap?
     // done---verify job needed---dclose hook to remove listeners from server from presenters
@@ -48,8 +48,8 @@ public class App extends Application {
     // exit menu item
     // client to perform an eternal portscan....scan should continue on disconnect, and should loop if no server found
     
-    // server threads bug...the app never dies on its own
-    // client might also exhibit
+    // --done--server threads bug...the app never dies on its own
+    // --todo--client might also exhibit
     // manage thread pools from app not automanaged
     // make server use a configured channel pool thing so i can use a cached thread pool with it
     // 
