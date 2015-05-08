@@ -6,11 +6,14 @@ import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.common.messages.MouseMove;
 import com.mystery.kvm.common.messages.MousePress;
 import com.mystery.kvm.common.messages.MouseRelease;
+import com.mystery.libmystery.nio.NioClient;
 import java.awt.AWTException;
 import java.awt.Dimension;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.event.InputEvent;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.stage.Stage;
@@ -22,8 +25,18 @@ public class MainApp extends Application {
 
      AutoJoin j = new AutoJoin((nioClient) -> {
       
+        //NioClient nioClient = new NioClient();
+        //nioClient.connect("127.0.0.1", 7777).onSucess(()->{
             Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
-            nioClient.send(new MonitorInfo(size.width, size.height));
+            
+            
+            
+            try {
+                nioClient.send(new MonitorInfo(size.width, size.height, InetAddress.getLocalHost().getHostName()));
+            } catch (UnknownHostException ex) {
+                //if i connected to something i dont think this can really happpen....
+                ex.printStackTrace();
+            }
 
             nioClient.onMessage(MouseMove.class, (msg) -> {
 
