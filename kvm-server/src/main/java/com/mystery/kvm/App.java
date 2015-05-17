@@ -51,9 +51,9 @@ public class App extends Application {
     // then he can yes or no to closing
     
     // client to hide mouse when not active
-    // client to use a trayicon
-    // exit menu item
-    // client to perform an eternal portscan....scan should continue on disconnect, and should loop if no server found
+    // done - client to use a trayicon
+    // done - exit menu item
+    // done - client to perform an eternal portscan....scan should continue on disconnect, and should loop if no server found
     
     // --done--server threads bug...the app never dies on its own
     // --todo--client might also exhibit
