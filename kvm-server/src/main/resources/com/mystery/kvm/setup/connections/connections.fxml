@@ -8,5 +8,5 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane id="AnchorPane" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mystery.kvm.setup.connections.ConnectionsPresenter">
-      <ListView fx:id="listView" prefHeight="600.0" prefWidth="200.0" />
+      <ListView styleClass="list" fx:id="listView" prefHeight="377.0" prefWidth="200.0" />
 </AnchorPane>

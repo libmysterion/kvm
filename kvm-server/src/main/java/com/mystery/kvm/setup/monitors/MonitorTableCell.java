@@ -9,11 +9,13 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.event.WeakEventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
@@ -24,7 +26,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
@@ -32,13 +36,13 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
 
     public static DataFormat DATAFORMAT = new DataFormat("com.mystery.kvm.setup.monitors.MonitorTableCell");
 
-    private int SETUP_TABLE_CELL_SIZE = 100;
+    private int SETUP_TABLE_CELL_SIZE = 75;
     private int LABEL_HEIGHT = 20;
 
     private MonitorsPresenter presenter;
 
-    private Background dragTargetBackGround = new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY));
-    private Background normalBackGround = new Background(new BackgroundFill(Color.WHITESMOKE, CornerRadii.EMPTY, Insets.EMPTY));
+    private Background dragTargetBackGround = new Background(new BackgroundFill(Color.LIGHTBLUE, CornerRadii.EMPTY, Insets.EMPTY));
+    private Background normalBackGround = new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY));
 
 
     private final ContextMenu menu = new ContextMenu();
@@ -49,7 +53,10 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         this.emitter = emitter;
         
         setBackground(normalBackGround);
+        
+        setMinSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);
         setPrefSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);
+        setMaxSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);
 
         setOnDragDetected(this::onDragDetected);
 
@@ -60,7 +67,7 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         setOnDragExited(this::onDragExited);                
         itemProperty().addListener(this::itemChanged);
         
-
+        
         // a remove operation from here should not disconnect he client
         // we should simply move him back to the connections as if it was dragged
         
@@ -166,11 +173,19 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
 
     private void buildCellNode(ImageView icon) {
         VBox box = new VBox();
+        HBox hbox = new HBox();
+        hbox.setAlignment(Pos.CENTER);
+        hbox.getChildren().add(icon);
         GridMonitor item = this.getItem();
         Label label = new Label(item.getAlias());
         box.setSpacing(0);
-        box.getChildren().addAll(icon, label);
+        box.getChildren().addAll(hbox, label);
+        
+        box.setMinSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);       
         box.setPrefSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);
+        box.setMaxSize(SETUP_TABLE_CELL_SIZE, SETUP_TABLE_CELL_SIZE);
+        
+        Tooltip.install(box, new Tooltip(item.getAlias()));
         this.setGraphic(box);
     }
 
@@ -186,8 +201,9 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
 
     private ImageView createIcon(String path) {
         ImageView imageView = new ImageView(new Image(getClass().getResourceAsStream(path)));
-        imageView.setFitHeight(SETUP_TABLE_CELL_SIZE - LABEL_HEIGHT);
-        imageView.setFitWidth(SETUP_TABLE_CELL_SIZE);
+        int imageWidthHeight = SETUP_TABLE_CELL_SIZE - LABEL_HEIGHT;
+        imageView.setFitHeight(imageWidthHeight);
+        imageView.setFitWidth(imageWidthHeight);
         return imageView;
     }
     

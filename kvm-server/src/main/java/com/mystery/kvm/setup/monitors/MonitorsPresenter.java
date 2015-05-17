@@ -136,6 +136,48 @@ public class MonitorsPresenter implements Initializable {
             tableView.autosize();
         });
 
+        
+        tableView.setSelectionModel(new TableView.TableViewSelectionModel(tableView) {
+            
+            @Override
+            public ObservableList getSelectedCells() {
+                 return FXCollections.emptyObservableList();
+            }
+            
+            @Override
+            public boolean isSelected(int row, TableColumn column) {
+                return false;
+            }
+            
+            @Override
+            public void select(int row, TableColumn column) {
+            }
+            
+            @Override
+            public void clearAndSelect(int row, TableColumn column) {
+            }
+            
+            @Override
+            public void clearSelection(int row, TableColumn column) {
+            }
+            
+            @Override
+            public void selectLeftCell() {
+            }
+            
+            @Override
+            public void selectRightCell() {
+            }
+            
+            @Override
+            public void selectAboveCell() {
+            }
+            
+            @Override
+            public void selectBelowCell() {
+            }
+        });
+        
         System.out.println("adding onConnection here++++");
         server.onConnection(new WeakHandler<>(this.onConnection));
 

@@ -34,7 +34,7 @@ public class App extends Application {
     // stability fixes ---mostly done still need to look at threads on exit issue... i think its mostly the autojoin pool..wait thats client..
     // done--prevent the stage window from showing in the taskbar
     // todo-phaze2?--be able to send alt+tab
-    // todo---make the ui pretty -- fx-bootstrap?
+    // done---make the ui pretty -- fx-bootstrap?
     // done---verify job needed---dclose hook to remove listeners from server from presenters
     // done---close hook to save the monitor setup config when window closed(and apply it to the server) 
     // done----ability to configure alias for monitor
@@ -133,10 +133,14 @@ public class App extends Application {
         if (!primaryStage.isShowing()) {   // if i add any more screens i guess i just need to add a check for that
             SetupView setupView = new SetupView();
             Scene scene = new Scene(setupView.getView());
-            //stage.setTitle("followme.fx");
+            primaryStage.setTitle("Setup your monitors");
             final String uri = getClass().getResource("app.css").toExternalForm();
             scene.getStylesheets().add(uri);
             primaryStage.setScene(scene);
+            primaryStage.setHeight(460);
+            primaryStage.setWidth(633);  
+            primaryStage.setResizable(false);
+            
             primaryStage.show();
         }
 
