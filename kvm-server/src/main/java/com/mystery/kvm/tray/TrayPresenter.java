@@ -15,7 +15,7 @@ public class TrayPresenter {
 
     @Inject
     private EventEmitter emitter;
-
+    
     @Inject
     private MioServer server;
 
@@ -27,7 +27,7 @@ public class TrayPresenter {
             SwingUtilities.invokeLater(() -> {
                 if (trayIcon != null) {
                     trayIcon.displayMessage(msg.getHeading(), msg.getMessage(), msg.getType());
-                }
+    }
             });
         });
     }
@@ -37,7 +37,7 @@ public class TrayPresenter {
             emitter.emit("showSetupView", null);
         });
     }
-
+    
     public void addAppToTray() {
         try {
             // ensure awt toolkit is initialized.
@@ -57,13 +57,13 @@ public class TrayPresenter {
             trayIcon.addActionListener(this::trayOnAction);
             java.awt.MenuItem openItem = new java.awt.MenuItem("Configure");
             openItem.addActionListener(this::trayOnAction);
-
+           
             // the convention for tray icons seems to be to set the default icon for opening
             // the application stage in a bold font.
             java.awt.Font defaultFont = java.awt.Font.decode(null);
             java.awt.Font boldFont = defaultFont.deriveFont(java.awt.Font.BOLD);
             openItem.setFont(boldFont);
-
+           
             // to really exit the application, the user must go to the system tray icon
             // and select the exit option, this will shutdown JavaFX and remove the
             // tray icon (removing the tray icon will also shut down AWT).
