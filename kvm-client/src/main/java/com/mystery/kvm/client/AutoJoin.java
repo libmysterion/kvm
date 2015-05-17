@@ -12,6 +12,6 @@ public class AutoJoin extends TcpPortScanningAutoJoinClient {
         super(9934, callback);
     }
 
-
     
+
 }
