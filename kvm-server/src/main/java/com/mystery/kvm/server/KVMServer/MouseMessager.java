@@ -1,16 +1,19 @@
 package com.mystery.kvm.server.KVMServer;
 
+import com.mystery.kvm.common.messages.ControlTransition;
 import com.mystery.kvm.common.messages.KeyPress;
 import com.mystery.kvm.common.messages.KeyRelease;
 import com.mystery.kvm.common.messages.MousePress;
 import com.mystery.kvm.common.messages.MouseMove;
 import com.mystery.kvm.common.messages.MouseRelease;
+import com.mystery.libmystery.injection.Inject;
+import com.mystery.libmystery.injection.Singleton;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.MioServer;
 import java.util.ArrayList;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
+@Singleton
 public class MouseMessager {
 
     @Inject
@@ -49,8 +52,7 @@ public class MouseMessager {
                     });
         }
     }
-    
-    
+
     public void mouseRelease(String hostname, int button) {
         synchronized (clients) {
             clients.stream()
@@ -71,9 +73,8 @@ public class MouseMessager {
         }
     }
 
-    
     void keyRelease(String hostname, int k) {
-          synchronized (clients) {
+        synchronized (clients) {
             clients.stream()
                     .filter((c) -> c.getHostName().equals(hostname))
                     .forEach((c) -> {
@@ -82,7 +83,24 @@ public class MouseMessager {
         }
     }
 
-    
-    
+    void activate(String hostname) {
+        synchronized (clients) {
+            clients.stream()
+                    .filter((c) -> c.getHostName().equals(hostname))
+                    .forEach((c) -> {
+                        c.send(new ControlTransition(true));
+                    });
+        }
+    }
+
+    void deactivate(String hostname) {
+        synchronized (clients) {
+            clients.stream()
+                    .filter((c) -> c.getHostName().equals(hostname))
+                    .forEach((c) -> {
+                        c.send(new ControlTransition(false));
+                    });
+        }
+    }
 
 }

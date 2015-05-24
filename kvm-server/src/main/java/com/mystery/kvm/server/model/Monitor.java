@@ -14,12 +14,13 @@ public class Monitor implements Serializable {
     private String hostname;
     private int gridX;
     private int gridY;
-
+    private String alias;
+    
     public Monitor() {
         connected = false;
     }
 
-    public Monitor(String name, Dimension size, boolean active, boolean isHost, int gridX, int gridY, boolean connected) {
+    public Monitor(String name, Dimension size, boolean active, boolean isHost, int gridX, int gridY, boolean connected, String alias) {
         hostname = name;
         mousePosition = new Point();
         this.size = size;
@@ -28,6 +29,7 @@ public class Monitor implements Serializable {
         this.gridX = gridX;
         this.gridY = gridY;
         this.connected = connected;
+        this.alias = alias;
     }
 
     public boolean isHost() {
@@ -89,5 +91,9 @@ public class Monitor implements Serializable {
      public void setConnected(boolean connected) {
         this.connected = connected;
     }
+     
+     public String getAlias(){
+         return alias;
+     }
 
 }

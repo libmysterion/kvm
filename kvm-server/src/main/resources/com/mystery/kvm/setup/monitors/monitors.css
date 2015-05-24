@@ -1,14 +1,26 @@
-/*
- * Empty Stylesheet file.
- */
 
-
+// Selected lines will look exactly as unselected lines
+// this css seems to fix a bug where the label will disapear if the monitor gets dragged on same row.
 .table-row-cell:filled:selected { 
   -fx-background: -fx-control-inner-background ;
   -fx-background-color: -fx-table-cell-border-color, -fx-background ;
   -fx-background-insets: 0, 0 0 1 0 ;
   -fx-table-cell-border-color: derive(-fx-color, 5%);
 }
+
 .table-row-cell:odd:filled:selected {
   -fx-background: -fx-control-inner-background-alt ;
+}
+
+
+.table-cell {    
+    -fx-border-width: 1 1 1 1;
+    -fx-border-style: solid;
+    -fx-border-color: #cccccc;
+    
+}
+
+.grid {
+    
+   
 }

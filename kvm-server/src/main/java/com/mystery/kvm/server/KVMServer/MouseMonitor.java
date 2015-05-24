@@ -20,7 +20,8 @@ public class MouseMonitor {
                 e.printStackTrace();
             }
         });
-       // t.setDaemon(true);
+        t.setName("MouseMonitor-thread");
+        t.setDaemon(true);
         return t;
     });
     

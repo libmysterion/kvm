@@ -1,20 +1,38 @@
 package com.mystery.kvm.server.model;
 
 import com.mystery.kvm.common.messages.MonitorInfo;
-import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.persistence.PersistantObject;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MonitorSetup extends PersistantObject {
 
-    private List<Monitor> monitors = new ArrayList<>();
+    static String path = "./monitors_setup";
+
+    private List<Monitor> monitors;
 
     public MonitorSetup() {
-        super("./monitor_setup");
+        super(path, true);
+        if (monitors == null) {
+            monitors = new ArrayList<>();
+        }
+    }
+
+    public MonitorSetup(boolean load) {
+        super(path, load);
+        if (monitors == null) {
+            monitors = new ArrayList<>();
+        }
+    }
+
+    public List<Monitor> getMonitors() {
+        return monitors;
+    }
+
+    public void setMonitors(List<Monitor> monitors) {
+        this.monitors = monitors;
     }
 
     public void connectClient(String hostname) {
@@ -35,7 +53,7 @@ public class MonitorSetup extends PersistantObject {
 
     public Monitor findHost() {
         List<Monitor> collect = monitors.stream().filter((m) -> m.isHost()).collect(Collectors.toList());
-        if(!collect.isEmpty()){
+        if (!collect.isEmpty()) {
             return collect.get(0);
         }
         return null;
@@ -79,7 +97,6 @@ public class MonitorSetup extends PersistantObject {
         List<Monitor> collect = monitors.stream()
                 .filter((m) -> m.getHostname().equals(hostname))
                 .collect(Collectors.toList());
-
         return (!collect.isEmpty());
     }
 
@@ -88,16 +105,35 @@ public class MonitorSetup extends PersistantObject {
                 .filter((m) -> m.getHostname().equals(hostname))
                 .collect(Collectors.toList());
 
-        if(!collect.isEmpty()){
+        if (!collect.isEmpty()) {
             return collect.get(0).getSize();
-        }
-        else {
+        } else {
             return null;
         }
     }
 
     public void remove(String hostname) {
         monitors.removeIf((m) -> m.getHostname().equals(hostname));
+    }
+
+    public Monitor getMonitor(String hostname) {
+        List<Monitor> collect = monitors.stream()
+                .filter((m) -> m.getHostname().equals(hostname))
+                .collect(Collectors.toList());
+
+        if (!collect.isEmpty()) {
+            return collect.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    public String getAlias(String hostName) {
+        Monitor monitor = this.getMonitor(hostName);
+        if (monitor != null) {
+            return monitor.getAlias();
+        }
+        return null;
     }
 
 }

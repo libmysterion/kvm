@@ -4,12 +4,20 @@ import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.server.model.Monitor;
 import com.mystery.kvm.server.model.MonitorSetup;
 import com.mystery.kvm.server.model.Transition;
+import com.mystery.kvm.tray.TrayMessage;
+import com.mystery.libmystery.event.EventEmitter;
+import com.mystery.libmystery.injection.Inject;
+import com.mystery.libmystery.injection.Property;
+import com.mystery.libmystery.injection.Singleton;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.MioServer;
 import java.awt.Point;
+import java.awt.TrayIcon;
+import javafx.stage.Stage;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
+
+@Singleton
 public class KVMServer {
 
     private final Object setupLock = new Object();
@@ -23,7 +31,25 @@ public class KVMServer {
     private MioServer server;
 
     @Inject
+    private Stage configStage;
+
+    @Inject
     private MouseMessager messager;
+
+    @Inject
+    private EventEmitter emitter;
+    
+    @Property
+    private String newMonitorBalloonHeader;
+    
+    @Property
+    private String newMonitorBalloonText;
+    
+    @Property
+    private String monitorReconnectBalloonHeader;
+    
+    @Property
+    private String monitorReconnectBalloonText;
 
     @PostConstruct
     void initialise() {
@@ -32,7 +58,9 @@ public class KVMServer {
     }
 
     public void setConfiguration(MonitorSetup setup) {
+        
         synchronized (setupLock) {
+            System.out.println("set config----");
             this.setup = setup;
             this.hostMonitor = setup.findHost();
             this.activeMonitor = hostMonitor;
@@ -49,7 +77,7 @@ public class KVMServer {
     // this method is called continuously by the mouse manager
     void setMousePosition(Point p) {
         synchronized (setupLock) {
-            if (this.setup != null) {
+            if (this.setup != null && hostMonitor != null) {
                 try {
                     // keep the model updated always
                     DimensionScale scale = new DimensionScale(this.hostMonitor.getSize(), this.activeMonitor.getSize());
@@ -87,8 +115,12 @@ public class KVMServer {
         Monitor nextMonitor = this.setup.findFromCurrent(x, y);
         if (nextMonitor != null && nextMonitor.isConnected()) {
             System.out.println("Moved monitor");
+            
+            this.messager.deactivate(this.activeMonitor.getHostname());
             this.activeMonitor.setActive(false);
+                        
             this.activeMonitor = nextMonitor;
+            this.messager.activate(this.activeMonitor.getHostname());
             this.activeMonitor.setActive(true);
             this.mouseManager.onTransition(new Transition(new Point(px, py), activeMonitor == hostMonitor));
         }
@@ -112,20 +144,46 @@ public class KVMServer {
     }
 
     private void onConnection(AsynchronousObjectSocketChannel client) {
-        if(setup!=null){
+
+        if (setup != null) {
             setup.connectClient(client.getHostName());
         }
-        
-        client.onMessage(MonitorInfo.class, (m)-> {
-            if (setup!=null) {
+
+        client.onMessage(MonitorInfo.class, (m) -> {
+            if (setup != null) {
                 setup.setSize(client.getHostName(), m);
+
+                if (!configStage.isShowing()) {
+                    boolean isInGridConfig = setup.hasHost(client.getHostName());
+                    if (isInGridConfig) {
+                        emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, m.getHostName() + monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
+                    } else {
+                        emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, m.getHostName() + newMonitorBalloonText, TrayIcon.MessageType.INFO));
+                    }
+                }
             }
         });
-        client.onDisconnect(() -> this.onDisconnect(client));
+        client.onDisconnect(this::onDisconnect);
     }
 
     private void onDisconnect(AsynchronousObjectSocketChannel client) {
-        setup.disconnectClient(client.getHostName());
+
+        if (setup != null) {    // setup null if not started yet
+
+            setup.disconnectClient(client.getHostName());
+            Monitor monitor = setup.getMonitor(client.getHostName());
+
+            if (activeMonitor == monitor) {
+                this.activeMonitor.setActive(false);
+                this.activeMonitor = hostMonitor;
+                this.activeMonitor.setActive(true);
+                int w = activeMonitor.getSize().width / 2;
+                int h = activeMonitor.getSize().height / 2;
+                this.mouseManager.onTransition(new Transition(new Point(w, h), true));
+            }
+
+        }
+
     }
 
 }

@@ -1,19 +1,16 @@
 package com.mystery.kvm;
 
-import com.airhacks.afterburner.injection.Injector;
 import com.mystery.kvm.setup.SetupView;
+import com.mystery.kvm.tray.TrayPresenter;
+import com.mystery.libmystery.event.EventEmitter;
+import com.mystery.libmystery.injection.Injector;
+import com.mystery.libmystery.injection.InjectorFactory;
 import com.mystery.libmystery.nio.MioServer;
-import java.awt.SystemTray;
-import java.awt.TrayIcon;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javax.imageio.ImageIO;
-import javax.swing.SwingUtilities;
 
 public class App extends Application {
 
@@ -29,19 +26,74 @@ public class App extends Application {
     // user opens for non-initial launch
     // the setup from previous session is picked up and loaded
     // as additional clients join they slot into their alloted position in the setup
-    // when a click joins a bubble message will come from the tray to inform host user
+    // when a client joins a bubble message will come from the tray to inform host user
     // if the client joining is not configured in the setup then a diferent message should show informing the host user
     // there will be ability to right click on a connection in the connections list to get a menu
-    // menu option will be "remove" which will disconnect the client
+    // done---menu option will be "remove" which will disconnect the client
     // 
+    // stability fixes ---mostly done still need to look at threads on exit issue... i think its mostly the autojoin pool..wait thats client..
+    // done--prevent the stage window from showing in the taskbar
+    // todo-phaze2?--be able to send alt+tab
+    // done---make the ui pretty -- fx-bootstrap?
+    // done---verify job needed---dclose hook to remove listeners from server from presenters
+    // done---close hook to save the monitor setup config when window closed(and apply it to the server) 
+    // done----ability to configure alias for monitor
+     // done---menu item - alias
+     // done----little input dialog thing to get the single field
+    // done----client to send hostname with the monitor info (since only host shows monitor name right, if machines swap ip's then alias would get messed up)
+    
+    // todo ---- grid validation
+    // the host monitor is currently required, but we plan the feature for no host monitor required with just all clients
+    // the monitors need to be connected to each other, dont do this as they are added, only on start(and exit??)
+    // on exit - if we prevent user from closing its a shit UX
+    // on exit - if it does not trigger validation then the user could think its running when its not
+    // we should show a popup saying "The grid is invalid, so mouse/keyboard share will not start, are you sure you want to close?"
+    // then he can yes or no to closing
+    
+    // client to hide mouse when not active
+    // done - client to use a trayicon
+    // done - exit menu item
+    // done - client to perform an eternal portscan....scan should continue on disconnect, and should loop if no server found
+    
+    // --done--server threads bug...the app never dies on its own
+    // --todo--client might also exhibit
+    // manage thread pools from app not automanaged
+    // make server use a configured channel pool thing so i can use a cached thread pool with it
+    // 
+    // stability fixes
+    //
+    // exe wrapper to include a private jre in the dist
+    // ---admin mode launcher----
+    // installer should have option to start client on machine startup (we need that since same installer used for host)
+    // if the user declined then it makes sense to have that function available somewhere(not sure how to do that since don know what it is yet)
+    // so i wont be able to do from java;thats for sure
+    // since it should be an exe on its own(or .bat or whatever) maybe the java can run it with Runtime.getRuntime.exec
+    // failing that (maybe) a start menu item for[Run client on startup]
+    // would need to come with corresponding [remove client run on startup]
+ 
+    // the goal is to have the UAC popop fire once on installation
+    // then on machine startup i want to start the client in admin mode without the UAC popup
+        // this should create a task like in these articles...
+    // see also - https://www.raymond.cc/blog/task-scheduler-bypass-uac-prompt/
+    // see also 2 - http://www.howtogeek.com/howto/windows-vista/create-administrator-mode-shortcuts-without-uac-prompts-in-windows-vista/
+    
+    
+// make a release branch
+    
+    // version 2
+    // client-side mouse "smoothing" whenever you get told to mouseTo somewhere do it in stages to prevent cursor jump
     // adding ability to have dual monitor setup
     // this should allow each monitor to be treated independently still
     // so i could setup like | dual-1 | guest | dual-2 |
     // and i would need to know when the user is going between monitors and have all the screen sizes
-    // but should be sort of the same as what we got  
+    // but should be sort of the same as what we got 
+    
+    
+    
     private MioServer server;
 
     private Stage primaryStage;
+    private EventEmitter emitter;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -54,26 +106,41 @@ public class App extends Application {
 
         server = createServer();
         
-        Injector.setModelOrService(MioServer.class, server);
-        Injector.setModelOrService(Stage.class, primaryStage);
-
+        Injector injector = InjectorFactory.getInstance();
+        injector.setSingleton(MioServer.class, server);
+        injector.setSingleton(Stage.class, primaryStage);
+        emitter = new EventEmitter();
+        injector.setSingleton(EventEmitter.class, emitter);
         
-        SwingUtilities.invokeLater(this::addAppToTray);
+        injector.create(TrayPresenter.class);
 
-        showSetupView();
+        emitter.on("showSetupView", this::showSetupView);
+        
+        
+        primaryStage.setOnHidden((c)-> {
+            System.out.println("onHidden");
+            emitter.emit("stage.hide", null);
+        });
+        
+        showSetupView(null);
 
         startApplicationServer();
     }
 
-    private void showSetupView() {
+    private void showSetupView(Void nul) {
         
         if (!primaryStage.isShowing()) {   // if i add any more screens i guess i just need to add a check for that
             SetupView setupView = new SetupView();
-            Scene scene = new Scene(setupView.getView());
-            //stage.setTitle("followme.fx");
+            
+            Scene scene = new Scene(setupView.getRootNode());
+            primaryStage.setTitle("Setup your monitors");
             final String uri = getClass().getResource("app.css").toExternalForm();
             scene.getStylesheets().add(uri);
             primaryStage.setScene(scene);
+            primaryStage.setHeight(460);
+            primaryStage.setWidth(633);  
+            primaryStage.setResizable(false);
+            
             primaryStage.show();
         }
 
@@ -94,86 +161,12 @@ public class App extends Application {
         }
     }
 
-    @Override
-    public void stop() throws Exception {
-        Injector.forgetAll();
-    }
+//    @Override
+//    public void stop() throws Exception {
+//        //Injector.forgetAll();
+//    }
 
-    private void trayOnAction(java.awt.event.ActionEvent e) {
-        Platform.runLater(() -> {
-            showSetupView();
-        });
-    }
-
-    // this how to display a baloon mesage
-//     javax.swing.SwingUtilities.invokeLater(() ->
-//                                trayIcon.displayMessage(
-//                                        "hello",
-//                                        "The time is now " + timeFormat.format(new Date()),
-//                                        java.awt.TrayIcon.MessageType.INFO
-//                                )
-//                            );
-    //    /**
-//     * Sets up a system tray icon for the application.
-//     */
-    private void addAppToTray() {
-        try {
-            // ensure awt toolkit is initialized.
-            java.awt.Toolkit.getDefaultToolkit();
-
-            // app requires system tray support, just exit if there is no support.
-            if (!java.awt.SystemTray.isSupported()) {
-                System.out.println("No system tray support, application exiting.");
-                Platform.exit();
-            }
-
-            // set up a system tray icon.
-            SystemTray tray = SystemTray.getSystemTray();
-
-            TrayIcon trayIcon = new TrayIcon(ImageIO.read(this.getClass().getResourceAsStream("/server/icons/monitor-icon-16x16.png")));
-
-            // if the user double-clicks on the tray icon, show the setup screen
-            trayIcon.addActionListener(this::trayOnAction);
-            java.awt.MenuItem openItem = new java.awt.MenuItem("Configure");
-            openItem.addActionListener(this::trayOnAction);
-
-            // the convention for tray icons seems to be to set the default icon for opening
-            // the application stage in a bold font.
-            java.awt.Font defaultFont = java.awt.Font.decode(null);
-            java.awt.Font boldFont = defaultFont.deriveFont(java.awt.Font.BOLD);
-            openItem.setFont(boldFont);
-
-            // to really exit the application, the user must go to the system tray icon
-            // and select the exit option, this will shutdown JavaFX and remove the
-            // tray icon (removing the tray icon will also shut down AWT).
-            java.awt.MenuItem exitItem = new java.awt.MenuItem("Exit");
-            exitItem.addActionListener(event -> {
-                Platform.exit();
-                tray.remove(trayIcon);
-                try {
-                    server.close();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                
-            });
-
-            // setup the popup menu for the application.
-            final java.awt.PopupMenu popup = new java.awt.PopupMenu();
-            popup.add(openItem);
-            popup.addSeparator();
-            popup.add(exitItem);
-            trayIcon.setPopupMenu(popup);
-
-            // add the application tray icon to the system tray.
-            tray.add(trayIcon);
-            
-            
-        } catch (java.awt.AWTException | IOException e) {
-            System.out.println("Unable to init system tray");
-            e.printStackTrace();
-        }
-    }
+    
 
 //    @Override
 //    public void start(Stage stage) throws Exception {

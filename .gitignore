@@ -1,3 +1,5 @@
 /kvm-common/target/
 /kvm-client/target/
 /kvm-server/target/
+/kvm-server/testMonitorfile
+/kvm-server/monitors_setup

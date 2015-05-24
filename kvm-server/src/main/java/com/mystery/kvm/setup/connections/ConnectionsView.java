@@ -1,7 +1,7 @@
 package com.mystery.kvm.setup.connections;
 
-import com.airhacks.afterburner.views.FXMLView;
+import com.mystery.libmystery.javafx.FXView;
 
-public class ConnectionsView extends FXMLView {
+public class ConnectionsView extends FXView<ConnectionsPresenter> {
     
 }

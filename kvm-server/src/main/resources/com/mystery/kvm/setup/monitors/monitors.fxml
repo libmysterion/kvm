@@ -8,5 +8,5 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane id="AnchorPane" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mystery.kvm.setup.monitors.MonitorsPresenter">
-    <TableView fx:id="tableView" prefHeight="535.0" prefWidth="500.0"/>
+    <TableView styleClass="grid" fx:id="tableView" prefHeight="377.0" prefWidth="377.0"/>
 </AnchorPane>
