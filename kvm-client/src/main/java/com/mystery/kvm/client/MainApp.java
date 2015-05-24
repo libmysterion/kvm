@@ -1,11 +1,13 @@
 package com.mystery.kvm.client;
 
+import com.mystery.kvm.common.messages.ControlTransition;
 import com.mystery.kvm.common.messages.KeyPress;
 import com.mystery.kvm.common.messages.KeyRelease;
 import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.common.messages.MouseMove;
 import com.mystery.kvm.common.messages.MousePress;
 import com.mystery.kvm.common.messages.MouseRelease;
+import com.mystery.kvm.common.transparentwindow.TransparentWindow;
 import com.mystery.libmystery.nio.Callback;
 import com.mystery.libmystery.nio.NioClient;
 import java.awt.AWTException;
@@ -24,11 +26,12 @@ public class MainApp extends Application {
 
     private Tray tray;
     private AutoJoin autojoin;
-    
+    private TransparentWindow transparentWindow;
+
     private Callback<NioClient> attachClient = (nioClient) -> {
 
         tray.setClient(nioClient);
-        
+
         //NioClient nioClient = new NioClient();
         //nioClient.connect("127.0.0.1", 7777).onSucess(()->{
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
@@ -39,6 +42,20 @@ public class MainApp extends Application {
             //if i connected to something i dont think this can really happpen....
             ex.printStackTrace();
         }
+
+        nioClient.onMessage(ControlTransition.class, (msg) -> {
+            if (!msg.isActive()) {
+                if (transparentWindow == null) {
+                    transparentWindow = new TransparentWindow();
+                    transparentWindow.show();
+                }
+            } else {
+                if (transparentWindow != null) {
+                    transparentWindow.hide();
+                    transparentWindow = null;
+                }
+            }
+        });
 
         nioClient.onMessage(MouseMove.class, (msg) -> {
 
@@ -104,21 +121,23 @@ public class MainApp extends Application {
                 ex.printStackTrace();
             }
         });
-        
+
         nioClient.onDisconnect((c) -> {
+            if (transparentWindow != null) {
+                transparentWindow.hide();
+            }
             startAutoJoin();
         });
 
     };
-    
-    
+
     private void startAutoJoin() {
-        
-        if(autojoin == null){
+
+        if (autojoin == null) {
             autojoin = new AutoJoin(attachClient);
             tray.setAutoJoin(autojoin);
         }
-        
+
         try {
             autojoin.start();
         } catch (IOException ex) {
@@ -128,7 +147,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        tray  = new Tray();
+        tray = new Tray();
         tray.addAppToTray();
         startAutoJoin();
     }
