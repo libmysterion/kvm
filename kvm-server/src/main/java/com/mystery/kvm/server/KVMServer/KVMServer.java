@@ -115,12 +115,12 @@ public class KVMServer {
         Monitor nextMonitor = this.setup.findFromCurrent(x, y);
         if (nextMonitor != null && nextMonitor.isConnected()) {
             System.out.println("Moved monitor");
+            
+            this.messager.deactivate(this.activeMonitor.getHostname());
             this.activeMonitor.setActive(false);
-            
-            // here we need to send a transition message to the previosactive monitor
-            // we also need to send the inverted transition to the next monitor...and for that test i will finally need 3 nodes
-            
+                        
             this.activeMonitor = nextMonitor;
+            this.messager.activate(this.activeMonitor.getHostname());
             this.activeMonitor.setActive(true);
             this.mouseManager.onTransition(new Transition(new Point(px, py), activeMonitor == hostMonitor));
         }
