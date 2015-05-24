@@ -2,7 +2,10 @@ package com.mystery.kvm.setup.connections;
 
 import com.mystery.kvm.setup.monitors.GridMonitor;
 import com.mystery.kvm.setup.monitors.MonitorTableCell;
+import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
+import com.mystery.libmystery.nio.MioServer;
 import java.util.Optional;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.event.WeakEventHandler;
@@ -18,11 +21,13 @@ import javafx.scene.input.TransferMode;
 
 public class ConnectionsListCell extends ListCell<GridMonitor> {
 
-    private ConnectionsPresenter presenter;
+    private ObservableList<GridMonitor> availableMonitors; 
     private final ContextMenu menu = new ContextMenu();
-
-    ConnectionsListCell(ConnectionsPresenter presenter) {
-        this.presenter = presenter;
+    private final MioServer mioServer; 
+    
+    ConnectionsListCell( ObservableList<GridMonitor> availableMonitors, MioServer mioServer) {
+        this.mioServer = mioServer;
+        this.availableMonitors = availableMonitors;
         setOnDragDetected(new WeakEventHandler<>(this.onDragDetected));
         setOnDragDone(new WeakEventHandler<>(this.onDragDone));
 
@@ -60,12 +65,12 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
 
     private EventHandler<DragEvent> onDragDone = (DragEvent event) -> {
         if (event.getAcceptedTransferMode() == TransferMode.MOVE) {
-            presenter.remove(getIndex());
+            availableMonitors.remove(getIndex());
         }
     };
 
     private EventHandler<ActionEvent> onRemoveClientClicked = (ActionEvent event) -> {
-        this.presenter.disconnectClient(this.getItem());
+        this.disconnectClient(this.getItem());
     };
 
     private final EventHandler<ActionEvent> onRenameClientClicked = (ActionEvent event) -> {
@@ -85,5 +90,18 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
             this.setText(getItem().getAlias());
         });
     };
+    
+    private void disconnectClient(GridMonitor item) {
+        try {
+            Optional<AsynchronousObjectSocketChannel> optional = mioServer.getClients()
+                    .filter((AsynchronousObjectSocketChannel c) -> c.getHostName().equals(item.getHostname()))
+                    .findFirst();
+            if (optional.isPresent()) {
+                mioServer.disconnectClient(optional.get());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }

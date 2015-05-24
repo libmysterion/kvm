@@ -1,8 +1,8 @@
 
 package com.mystery.kvm.setup;
 
-import com.airhacks.afterburner.views.FXMLView;
+import com.mystery.libmystery.javafx.FXView;
 
-public class SetupView extends FXMLView {
+public class SetupView extends FXView<SetupPresenter> {
     
 }

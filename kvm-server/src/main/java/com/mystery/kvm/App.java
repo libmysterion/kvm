@@ -1,16 +1,16 @@
 package com.mystery.kvm;
 
-import com.airhacks.afterburner.injection.Injector;
 import com.mystery.kvm.setup.SetupView;
 import com.mystery.kvm.tray.TrayPresenter;
 import com.mystery.libmystery.event.EventEmitter;
+import com.mystery.libmystery.injection.Injector;
+import com.mystery.libmystery.injection.InjectorFactory;
 import com.mystery.libmystery.nio.MioServer;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javax.swing.SwingUtilities;
 
 public class App extends Application {
 
@@ -106,14 +106,13 @@ public class App extends Application {
 
         server = createServer();
         
-        Injector.setModelOrService(MioServer.class, server);
-        Injector.setModelOrService(Stage.class, primaryStage);
-
-        emitter = (EventEmitter)Injector.instantiateModelOrService(EventEmitter.class);   
-        TrayPresenter trayPresenter = (TrayPresenter)Injector.instantiateModelOrService(TrayPresenter.class);
+        Injector injector = InjectorFactory.getInstance();
+        injector.setSingleton(MioServer.class, server);
+        injector.setSingleton(Stage.class, primaryStage);
+        emitter = new EventEmitter();
+        injector.setSingleton(EventEmitter.class, emitter);
         
-        
-        SwingUtilities.invokeLater(trayPresenter::addAppToTray);
+        injector.create(TrayPresenter.class);
 
         emitter.on("showSetupView", this::showSetupView);
         
@@ -132,7 +131,8 @@ public class App extends Application {
         
         if (!primaryStage.isShowing()) {   // if i add any more screens i guess i just need to add a check for that
             SetupView setupView = new SetupView();
-            Scene scene = new Scene(setupView.getView());
+            
+            Scene scene = new Scene(setupView.getRootNode());
             primaryStage.setTitle("Setup your monitors");
             final String uri = getClass().getResource("app.css").toExternalForm();
             scene.getStylesheets().add(uri);
@@ -161,10 +161,10 @@ public class App extends Application {
         }
     }
 
-    @Override
-    public void stop() throws Exception {
-        Injector.forgetAll();
-    }
+//    @Override
+//    public void stop() throws Exception {
+//        //Injector.forgetAll();
+//    }
 
     
 

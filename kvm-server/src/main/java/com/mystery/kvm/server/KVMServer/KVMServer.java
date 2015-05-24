@@ -6,14 +6,18 @@ import com.mystery.kvm.server.model.MonitorSetup;
 import com.mystery.kvm.server.model.Transition;
 import com.mystery.kvm.tray.TrayMessage;
 import com.mystery.libmystery.event.EventEmitter;
+import com.mystery.libmystery.injection.Inject;
+import com.mystery.libmystery.injection.Property;
+import com.mystery.libmystery.injection.Singleton;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.MioServer;
 import java.awt.Point;
 import java.awt.TrayIcon;
 import javafx.stage.Stage;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
+
+@Singleton
 public class KVMServer {
 
     private final Object setupLock = new Object();
@@ -35,16 +39,16 @@ public class KVMServer {
     @Inject
     private EventEmitter emitter;
     
-    @Inject
+    @Property
     private String newMonitorBalloonHeader;
     
-    @Inject
+    @Property
     private String newMonitorBalloonText;
     
-    @Inject
+    @Property
     private String monitorReconnectBalloonHeader;
     
-    @Inject
+    @Property
     private String monitorReconnectBalloonText;
 
     @PostConstruct
@@ -54,7 +58,9 @@ public class KVMServer {
     }
 
     public void setConfiguration(MonitorSetup setup) {
+        
         synchronized (setupLock) {
+            System.out.println("set config----");
             this.setup = setup;
             this.hostMonitor = setup.findHost();
             this.activeMonitor = hostMonitor;
@@ -110,6 +116,10 @@ public class KVMServer {
         if (nextMonitor != null && nextMonitor.isConnected()) {
             System.out.println("Moved monitor");
             this.activeMonitor.setActive(false);
+            
+            // here we need to send a transition message to the previosactive monitor
+            // we also need to send the inverted transition to the next monitor...and for that test i will finally need 3 nodes
+            
             this.activeMonitor = nextMonitor;
             this.activeMonitor.setActive(true);
             this.mouseManager.onTransition(new Transition(new Point(px, py), activeMonitor == hostMonitor));

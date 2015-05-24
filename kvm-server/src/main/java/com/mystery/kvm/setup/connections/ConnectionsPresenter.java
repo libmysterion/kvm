@@ -15,6 +15,8 @@ import com.mystery.libmystery.nio.DisconnectHandler;
 import com.mystery.libmystery.nio.MioServer;
 import com.mystery.libmystery.event.WeakDualHandler;
 import com.mystery.libmystery.event.WeakHandler;
+import com.mystery.libmystery.injection.Inject;
+import com.mystery.libmystery.injection.PostConstruct;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.TrayIcon;
@@ -36,9 +38,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
-import javax.inject.Inject;
 
-public class ConnectionsPresenter implements Initializable {
+
+public class ConnectionsPresenter implements Initializable{
 
     @FXML
     private ListView listView;
@@ -60,15 +62,15 @@ public class ConnectionsPresenter implements Initializable {
     private MonitorSetup monitorSetup;
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL url, ResourceBundle bundle) {
 
         listView.setItems(availableMonitors);
-        listView.setCellFactory((e) -> new ConnectionsListCell(this));
+        listView.setCellFactory((e) -> new ConnectionsListCell(availableMonitors, server));
 
         listView.setOnDragOver(new WeakEventHandler<>(this.onDragOver));
         listView.setOnDragDropped(new WeakEventHandler<>(this.onDragDropped));
 
-        server.onConnection(new WeakHandler<>(this.onConnection));  // weak handler will allow GC and remove itself
+        server.onConnection(new WeakHandler<>(this.onConnection));
 
         emitter.on("stage.hide", new WeakHandler<>(this.onStageHide));
         emitter.on(RemoveFromGridEvent.class, new WeakHandler<>(this.onRemovedFromGrid));
@@ -165,17 +167,6 @@ public class ConnectionsPresenter implements Initializable {
                 .forEach((gm) -> this.availableMonitors.add(gm));
     }
 
-    void disconnectClient(GridMonitor item) {
-        try {
-            Optional<AsynchronousObjectSocketChannel> optional = server.getClients()
-                    .filter((AsynchronousObjectSocketChannel c) -> c.getHostName().equals(item.getHostname()))
-                    .findFirst();
-            if (optional.isPresent()) {
-                server.disconnectClient(optional.get());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+    
 
 }

@@ -1,21 +1,27 @@
 package com.mystery.kvm.tray;
 
 import com.mystery.libmystery.event.EventEmitter;
+import com.mystery.libmystery.injection.Inject;
+import com.mystery.libmystery.injection.PostConstruct;
+import com.mystery.libmystery.injection.Singleton;
 import com.mystery.libmystery.nio.MioServer;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.io.IOException;
 import javafx.application.Platform;
-import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
-import javax.inject.Inject;
 import javax.swing.SwingUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Singleton
 public class TrayPresenter {
 
+    public static final Logger log = LoggerFactory.getLogger(TrayPresenter.class);
+    
     @Inject
     private EventEmitter emitter;
-    
+
     @Inject
     private MioServer server;
 
@@ -27,9 +33,10 @@ public class TrayPresenter {
             SwingUtilities.invokeLater(() -> {
                 if (trayIcon != null) {
                     trayIcon.displayMessage(msg.getHeading(), msg.getMessage(), msg.getType());
-    }
+                }
             });
-        });
+        });        
+        SwingUtilities.invokeLater(this::addAppToTray);
     }
 
     private void trayOnAction(java.awt.event.ActionEvent e) {
@@ -37,15 +44,16 @@ public class TrayPresenter {
             emitter.emit("showSetupView", null);
         });
     }
-    
+
     public void addAppToTray() {
         try {
+            log.debug("adding application to tray");
             // ensure awt toolkit is initialized.
             java.awt.Toolkit.getDefaultToolkit();
 
             // app requires system tray support, just exit if there is no support.
             if (!java.awt.SystemTray.isSupported()) {
-                System.out.println("No system tray support, application exiting.");
+                log.error("No system tray support, application exiting.");
                 Platform.exit();
             }
 
@@ -57,13 +65,13 @@ public class TrayPresenter {
             trayIcon.addActionListener(this::trayOnAction);
             java.awt.MenuItem openItem = new java.awt.MenuItem("Configure");
             openItem.addActionListener(this::trayOnAction);
-           
+
             // the convention for tray icons seems to be to set the default icon for opening
             // the application stage in a bold font.
             java.awt.Font defaultFont = java.awt.Font.decode(null);
             java.awt.Font boldFont = defaultFont.deriveFont(java.awt.Font.BOLD);
             openItem.setFont(boldFont);
-           
+
             // to really exit the application, the user must go to the system tray icon
             // and select the exit option, this will shutdown JavaFX and remove the
             // tray icon (removing the tray icon will also shut down AWT).

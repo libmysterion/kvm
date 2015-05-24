@@ -1,7 +1,7 @@
 package com.mystery.kvm.setup.monitors;
 
-import com.airhacks.afterburner.views.FXMLView;
+import com.mystery.libmystery.javafx.FXView;
 
-public class MonitorsView extends FXMLView{
+public class MonitorsView extends FXView<MonitorsPresenter>{
     
 }

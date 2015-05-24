@@ -13,7 +13,7 @@
             <children>
                 <HBox fx:id="hBox" id="hBox" alignment="CENTER" spacing="30.0">
                     <children>
-                                    
+    
                     </children>
                 </HBox>
                 <HBox alignment="CENTER_RIGHT" spacing="5.0">

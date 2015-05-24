@@ -5,12 +5,14 @@ import com.mystery.kvm.common.messages.KeyRelease;
 import com.mystery.kvm.common.messages.MousePress;
 import com.mystery.kvm.common.messages.MouseMove;
 import com.mystery.kvm.common.messages.MouseRelease;
+import com.mystery.libmystery.injection.Inject;
+import com.mystery.libmystery.injection.Singleton;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.MioServer;
 import java.util.ArrayList;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
+@Singleton
 public class MouseMessager {
 
     @Inject

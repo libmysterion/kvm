@@ -1,6 +1,8 @@
 package com.mystery.kvm.setup.monitors;
 
 import com.mystery.libmystery.event.EventEmitter;
+import com.mystery.libmystery.event.Handler;
+import com.mystery.libmystery.event.WeakHandler;
 import java.util.Optional;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -79,7 +81,15 @@ public class MonitorTableCell extends TableCell<GridRow, GridMonitor> {
         aliasMenuItem.setOnAction(new WeakEventHandler<>(this.onRenameClientClicked));
         setContextMenu(menu);
         
+        emitter.on("stage.hide", new WeakHandler(onStageHide));
+        
     }
+    
+    Handler<Void> onStageHide = (e)->{
+          this.presenter = null;
+      
+    };
+    
 
     
     private void itemChanged(ObservableValue<? extends GridMonitor> observable, GridMonitor oldItem, GridMonitor newItem) {

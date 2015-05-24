@@ -1,6 +1,7 @@
 
 package com.mystery.kvm.server.KVMServer;
 
+import com.mystery.kvm.common.transparentwindow.TransparentWindow;
 import com.mystery.kvm.server.model.Transition;
 import java.awt.AWTException;
 import java.awt.Point;
