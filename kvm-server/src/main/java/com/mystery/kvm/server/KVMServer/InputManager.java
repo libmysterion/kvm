@@ -6,10 +6,14 @@ import com.mystery.kvm.server.model.Transition;
 import java.awt.AWTException;
 import java.awt.Point;
 import java.awt.Robot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class InputManager {
 
+    private static final Logger log = LoggerFactory.getLogger(InputManager.class);
+    
     private MouseMonitor mon = new MouseMonitor();
     private KVMServer kvm;
 
@@ -22,6 +26,8 @@ public class InputManager {
     }
     
     public final void startMouseMonitor() {
+        System.out.println("=====================here");
+        log.trace("startMouseMonitor");
         mon = new MouseMonitor();
         mon.onTick(this::onMouseMoved);
         mon.start();
@@ -48,8 +54,11 @@ public class InputManager {
             transparentWindow.addMouseMoveListener(this::onMouseMoved);
             transparentWindow.addMousePressListener((b) ->  kvm.mousePressed(b));
             transparentWindow.addMouseReleaseListener((b) ->  kvm.mouseReleased(b));
+            transparentWindow.addMouseScrollListener((b) ->  kvm.mouseScrolled(b));
+            
             transparentWindow.addKeyPressListener((k) ->  kvm.keyPressed(k));
             transparentWindow.addKeyReleaseListener((k) ->  kvm.keyReleased(k));
+            
             
             
             transparentWindow.show();

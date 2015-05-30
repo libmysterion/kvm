@@ -35,15 +35,18 @@ public class MonitorSetup extends PersistantObject {
         this.monitors = monitors;
     }
 
-    public void connectClient(String hostname) {
+    public void connectMonitor(MonitorInfo monitorInfo) {
         monitors.stream()
-                .filter((m) -> m.getHostname().equals(hostname))
-                .forEach((m) -> m.setConnected(true));
+                .filter((m) -> m.getHostname().equals(monitorInfo.getHostName()))
+                .forEach((m) -> {
+                    m.setConnected(true);
+                    m.setSize(new Dimension(monitorInfo.getWidth(), monitorInfo.getHeight()));
+                });
     }
 
-    public void disconnectClient(String hostname) {
+    public void disconnectMonitor(MonitorInfo monitorInfo) {
         monitors.stream()
-                .filter((m) -> m.getHostname().equals(hostname))
+                .filter((m) -> m.getHostname().equals(monitorInfo.getHostName()))
                 .forEach((m) -> m.setConnected(false));
     }
 
@@ -87,17 +90,10 @@ public class MonitorSetup extends PersistantObject {
         return getMonitor(offsetX + active.getGridX(), offsetY + active.getGridY());
     }
 
-    public void setSize(String hostName, MonitorInfo mi) {
-        monitors.stream()
-                .filter((m) -> m.getHostname().equals(hostName))
-                .forEach((m) -> m.setSize(new Dimension(mi.getWidth(), mi.getHeight())));
-    }
-
-    public boolean hasHost(String hostname) {
-        List<Monitor> collect = monitors.stream()
-                .filter((m) -> m.getHostname().equals(hostname))
-                .collect(Collectors.toList());
-        return (!collect.isEmpty());
+    public boolean hasMonitor(MonitorInfo monitor) {
+        return monitors.stream()
+                .filter((m) -> m.getHostname().equals(monitor.getHostName()))
+                .count() > 0;
     }
 
     public Dimension getSize(String hostname) {

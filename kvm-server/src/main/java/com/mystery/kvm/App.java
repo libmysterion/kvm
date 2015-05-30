@@ -1,7 +1,9 @@
 package com.mystery.kvm;
 
+import com.mystery.kvm.server.model.MonitorSetup;
+import com.mystery.kvm.server.model.MonitorSetupInstanceFactory;
 import com.mystery.kvm.setup.SetupView;
-import com.mystery.kvm.tray.TrayPresenter;
+import com.mystery.kvm.tray.TrayService;
 import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.injection.Injector;
 import com.mystery.libmystery.injection.InjectorFactory;
@@ -38,10 +40,9 @@ public class App extends Application {
     // done---verify job needed---dclose hook to remove listeners from server from presenters
     // done---close hook to save the monitor setup config when window closed(and apply it to the server) 
     // done----ability to configure alias for monitor
-     // done---menu item - alias
-     // done----little input dialog thing to get the single field
+    // done---menu item - alias
+    // done----little input dialog thing to get the single field
     // done----client to send hostname with the monitor info (since only host shows monitor name right, if machines swap ip's then alias would get messed up)
-    
     // todo ---- grid validation
     // the host monitor is currently required, but we plan the feature for no host monitor required with just all clients
     // the monitors need to be connected to each other, dont do this as they are added, only on start(and exit??)
@@ -49,12 +50,10 @@ public class App extends Application {
     // on exit - if it does not trigger validation then the user could think its running when its not
     // we should show a popup saying "The grid is invalid, so mouse/keyboard share will not start, are you sure you want to close?"
     // then he can yes or no to closing
-    
     // client to hide mouse when not active
     // done - client to use a trayicon
     // done - exit menu item
     // done - client to perform an eternal portscan....scan should continue on disconnect, and should loop if no server found
-    
     // --done--server threads bug...the app never dies on its own
     // --todo--client might also exhibit
     // manage thread pools from app not automanaged
@@ -70,16 +69,12 @@ public class App extends Application {
     // since it should be an exe on its own(or .bat or whatever) maybe the java can run it with Runtime.getRuntime.exec
     // failing that (maybe) a start menu item for[Run client on startup]
     // would need to come with corresponding [remove client run on startup]
- 
     // the goal is to have the UAC popop fire once on installation
     // then on machine startup i want to start the client in admin mode without the UAC popup
-        // this should create a task like in these articles...
+    // this should create a task like in these articles...
     // see also - https://www.raymond.cc/blog/task-scheduler-bypass-uac-prompt/
     // see also 2 - http://www.howtogeek.com/howto/windows-vista/create-administrator-mode-shortcuts-without-uac-prompts-in-windows-vista/
-    
-    
 // make a release branch
-    
     // version 2
     // client-side mouse "smoothing" whenever you get told to mouseTo somewhere do it in stages to prevent cursor jump
     // adding ability to have dual monitor setup
@@ -87,9 +82,6 @@ public class App extends Application {
     // so i could setup like | dual-1 | guest | dual-2 |
     // and i would need to know when the user is going between monitors and have all the screen sizes
     // but should be sort of the same as what we got 
-    
-    
-    
     private MioServer server;
 
     private Stage primaryStage;
@@ -105,42 +97,43 @@ public class App extends Application {
         Properties.initApplicationProperties();
 
         server = createServer();
-        
+
         Injector injector = InjectorFactory.getInstance();
         injector.setSingleton(MioServer.class, server);
         injector.setSingleton(Stage.class, primaryStage);
         emitter = new EventEmitter();
         injector.setSingleton(EventEmitter.class, emitter);
-        
-        injector.create(TrayPresenter.class);
+
+        injector.create(TrayService.class);
+
+        injector.setInstanceFactory(MonitorSetup.class, new MonitorSetupInstanceFactory());
 
         emitter.on("showSetupView", this::showSetupView);
-        
-        
-        primaryStage.setOnHidden((c)-> {
+
+        primaryStage.setOnHidden((c) -> {
             System.out.println("onHidden");
             emitter.emit("stage.hide", null);
         });
-        
+
         showSetupView(null);
 
         startApplicationServer();
     }
 
     private void showSetupView(Void nul) {
-        
+
         if (!primaryStage.isShowing()) {   // if i add any more screens i guess i just need to add a check for that
             SetupView setupView = new SetupView();
-            
+
             Scene scene = new Scene(setupView.getRootNode());
             primaryStage.setTitle("Setup your monitors");
             final String uri = getClass().getResource("app.css").toExternalForm();
             scene.getStylesheets().add(uri);
             primaryStage.setScene(scene);
             primaryStage.setHeight(460);
-            primaryStage.setWidth(633);  
+            primaryStage.setWidth(633);
             primaryStage.setResizable(false);
-            
+
             primaryStage.show();
         }
 
@@ -165,9 +158,6 @@ public class App extends Application {
 //    public void stop() throws Exception {
 //        //Injector.forgetAll();
 //    }
-
-    
-
 //    @Override
 //    public void start(Stage stage) throws Exception {
 //        System.out.println("---LAUNCH SERVER---");

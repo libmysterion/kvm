@@ -91,6 +91,7 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
         });
     };
     
+    // todo - bug heere ---we need to use the nonitor info to compare hostnames
     private void disconnectClient(GridMonitor item) {
         try {
             Optional<AsynchronousObjectSocketChannel> optional = mioServer.getClients()

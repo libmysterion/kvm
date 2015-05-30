@@ -5,8 +5,10 @@ import com.mystery.kvm.server.model.Monitor;
 import com.mystery.kvm.server.model.MonitorSetup;
 import com.mystery.kvm.server.model.Transition;
 import com.mystery.kvm.tray.TrayMessage;
+import com.mystery.libmystery.event.DualHandler;
 import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.injection.Inject;
+import com.mystery.libmystery.injection.PostConstruct;
 import com.mystery.libmystery.injection.Property;
 import com.mystery.libmystery.injection.Singleton;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
@@ -14,8 +16,7 @@ import com.mystery.libmystery.nio.MioServer;
 import java.awt.Point;
 import java.awt.TrayIcon;
 import javafx.stage.Stage;
-import javax.annotation.PostConstruct;
-
+import sun.util.logging.resources.logging;
 
 @Singleton
 public class KVMServer {
@@ -38,27 +39,28 @@ public class KVMServer {
 
     @Inject
     private EventEmitter emitter;
-    
+
     @Property
     private String newMonitorBalloonHeader;
-    
+
     @Property
     private String newMonitorBalloonText;
-    
+
     @Property
     private String monitorReconnectBalloonHeader;
-    
+
     @Property
     private String monitorReconnectBalloonText;
 
     @PostConstruct
     void initialise() {
         mouseManager.startMouseMonitor();
-        server.onConnection(this::onConnection);
+        emitter.on("client.connect", clientConnected);
+        emitter.on("client.disconnect", clientDisconnected);
     }
 
     public void setConfiguration(MonitorSetup setup) {
-        
+
         synchronized (setupLock) {
             System.out.println("set config----");
             this.setup = setup;
@@ -111,14 +113,14 @@ public class KVMServer {
     }
 
     private void doTransition(int x, int y, int px, int py) {
-        // System.out.println("doTransition");
+        System.out.println("doTransition");
         Monitor nextMonitor = this.setup.findFromCurrent(x, y);
         if (nextMonitor != null && nextMonitor.isConnected()) {
             System.out.println("Moved monitor");
-            
+
             this.messager.deactivate(this.activeMonitor.getHostname());
             this.activeMonitor.setActive(false);
-                        
+
             this.activeMonitor = nextMonitor;
             this.messager.activate(this.activeMonitor.getHostname());
             this.activeMonitor.setActive(true);
@@ -134,6 +136,10 @@ public class KVMServer {
     void mouseReleased(int button) {
         messager.mouseRelease(this.activeMonitor.getHostname(), button);
     }
+    
+    void mouseScrolled (int amount) {
+        messager.mouseWheel(this.activeMonitor.getHostname(), amount);
+    }
 
     void keyPressed(int k) {
         messager.keyPress(this.activeMonitor.getHostname(), k);
@@ -143,35 +149,29 @@ public class KVMServer {
         messager.keyRelease(this.activeMonitor.getHostname(), k);
     }
 
-    private void onConnection(AsynchronousObjectSocketChannel client) {
+    private final DualHandler<AsynchronousObjectSocketChannel, MonitorInfo> clientConnected = (client, monitor) -> {
 
         if (setup != null) {
-            setup.connectClient(client.getHostName());
-        }
 
-        client.onMessage(MonitorInfo.class, (m) -> {
-            if (setup != null) {
-                setup.setSize(client.getHostName(), m);
+            setup.connectMonitor(monitor);
 
-                if (!configStage.isShowing()) {
-                    boolean isInGridConfig = setup.hasHost(client.getHostName());
-                    if (isInGridConfig) {
-                        emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, m.getHostName() + monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
-                    } else {
-                        emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, m.getHostName() + newMonitorBalloonText, TrayIcon.MessageType.INFO));
-                    }
+            if (!configStage.isShowing()) {
+                boolean isInGridConfig = setup.hasMonitor(monitor);
+                if (isInGridConfig) {
+                    emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, monitor.getHostName() + monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
+                } else {
+                    emitter.emit(TrayMessage.class, new TrayMessage(newMonitorBalloonHeader, monitor.getHostName() + newMonitorBalloonText, TrayIcon.MessageType.INFO));
                 }
             }
-        });
-        client.onDisconnect(this::onDisconnect);
-    }
+        }
 
-    private void onDisconnect(AsynchronousObjectSocketChannel client) {
+    };
 
+    private final DualHandler<AsynchronousObjectSocketChannel, MonitorInfo> clientDisconnected = (client, monitorInfo) -> {
         if (setup != null) {    // setup null if not started yet
 
-            setup.disconnectClient(client.getHostName());
-            Monitor monitor = setup.getMonitor(client.getHostName());
+            setup.disconnectMonitor(monitorInfo);
+            Monitor monitor = setup.getMonitor(monitorInfo.getHostName());
 
             if (activeMonitor == monitor) {
                 this.activeMonitor.setActive(false);
@@ -184,6 +184,6 @@ public class KVMServer {
 
         }
 
-    }
+    };
 
 }

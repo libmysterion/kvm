@@ -15,10 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class TrayPresenter {
+public class TrayService {
 
-    public static final Logger log = LoggerFactory.getLogger(TrayPresenter.class);
-    
+    public static final Logger log = LoggerFactory.getLogger(TrayService.class);
+
     @Inject
     private EventEmitter emitter;
 
@@ -29,13 +29,7 @@ public class TrayPresenter {
 
     @PostConstruct
     private void init() {
-        emitter.on(TrayMessage.class, (msg) -> {
-            SwingUtilities.invokeLater(() -> {
-                if (trayIcon != null) {
-                    trayIcon.displayMessage(msg.getHeading(), msg.getMessage(), msg.getType());
-                }
-            });
-        });        
+        emitter.on(TrayMessage.class, this::showMessage);
         SwingUtilities.invokeLater(this::addAppToTray);
     }
 
@@ -101,5 +95,13 @@ public class TrayPresenter {
             System.out.println("Unable to init system tray");
             e.printStackTrace();
         }
+    }
+
+    public void showMessage(TrayMessage trayMessage) {
+        SwingUtilities.invokeLater(() -> {
+            if (trayIcon != null) {
+                trayIcon.displayMessage(trayMessage.getHeading(), trayMessage.getMessage(), trayMessage.getType());
+            }
+        });
     }
 }

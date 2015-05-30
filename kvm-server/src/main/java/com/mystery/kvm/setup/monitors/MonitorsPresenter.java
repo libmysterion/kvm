@@ -1,23 +1,25 @@
 package com.mystery.kvm.setup.monitors;
 
 import com.mystery.kvm.common.messages.MonitorInfo;
+import com.mystery.kvm.server.KVMServer.KVMServer;
 import com.mystery.kvm.server.model.Monitor;
 import com.mystery.kvm.server.model.MonitorSetup;
+import com.mystery.kvm.setup.connections.ConnectionsService;
 import com.mystery.kvm.tray.TrayMessage;
+import com.mystery.libmystery.event.DualHandler;
 import com.mystery.libmystery.event.EventEmitter;
 import com.mystery.libmystery.event.Handler;
 import com.mystery.libmystery.event.WeakDualHandler;
 import com.mystery.libmystery.event.WeakHandler;
 import com.mystery.libmystery.injection.Inject;
-import com.mystery.libmystery.injection.PostConstruct;
 import com.mystery.libmystery.injection.Property;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.ClientMessageHandler;
 import com.mystery.libmystery.nio.ConnectionHandler;
 import com.mystery.libmystery.nio.DisconnectHandler;
 import com.mystery.libmystery.nio.MioServer;
-import java.awt.Dimension;
 import java.awt.TrayIcon;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,18 +29,14 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.WeakInvalidationListener;
 import javafx.beans.value.ObservableValue;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.Pane;
-import javafx.util.Callback;
 
 public class MonitorsPresenter implements Initializable {
 
@@ -49,10 +47,10 @@ public class MonitorsPresenter implements Initializable {
     private TableView tableView;
 
     @Inject
-    private MioServer server;
+    private EventEmitter emitter;
 
     @Inject
-    private EventEmitter emitter;
+    private MonitorSetup monitorSetup;
 
     @Property
     private String monitorReconnectBalloonHeader;
@@ -60,7 +58,11 @@ public class MonitorsPresenter implements Initializable {
     @Property
     private String monitorReconnectBalloonText;
 
-    private List<String> clients = new ArrayList<>();
+    @Inject
+    private KVMServer kvm;
+    
+    @Inject
+    private ConnectionsService connectionsService;
 
     private final ObservableList<GridRow> tableModel = FXCollections.observableArrayList();
 
@@ -73,20 +75,21 @@ public class MonitorsPresenter implements Initializable {
         return param.getValue().getCellProperty(columnIndex);
     }
 
-    public void setConfig(MonitorSetup config) {
-
+    private void setConfig() {
         for (int row = 0; row < MONITOR_SETUP_GRID_SIZE; row++) {
             for (int col = 0; col < MONITOR_SETUP_GRID_SIZE; col++) {
-                Monitor monitor = config.getMonitor(col, row);
+                Monitor monitor = this.monitorSetup.getMonitor(col, row);
                 if (monitor != null) {
                     boolean isConnected = monitor.isHost();
                     if (!isConnected) {
-                        List<AsynchronousObjectSocketChannel> collect = server.getClients()
-                                .filter((c) -> c.getHostName().equals(monitor.getHostname()))
-                                .collect(Collectors.toList());
-                        if (!collect.isEmpty()) {
-                            isConnected = true;
+ 
+                        for(MonitorInfo mon : connectionsService.getClientMap().values()){
+                            if(mon.getHostName().equals(monitor.getHostname())){
+                                isConnected = true;
+                                break;
+                            }
                         }
+                        
                     }
                     // todo needs to put the alias in th saved config probably
                     GridMonitor gridMonitor = new GridMonitor(monitor.getHostname(), monitor.getSize(), monitor.isHost(), isConnected, monitor.getAlias());
@@ -123,9 +126,15 @@ public class MonitorsPresenter implements Initializable {
         return column;
     }
 
-   
-
     private final Handler<Void> onStageHide = (v) -> {
+        MonitorSetup config = getConfig();
+        try {
+            config.save();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        kvm.setConfiguration(config);
+
         tableView.getColumns().forEach(new Consumer<TableColumn<GridRow, GridMonitor>>() {
 
             public void accept(TableColumn<GridRow, GridMonitor> c) {
@@ -150,8 +159,10 @@ public class MonitorsPresenter implements Initializable {
 
         tableView.setSelectionModel(new NullTableSelectionModel(tableView));
 
-        server.onConnection(new WeakHandler<>(this.onConnection));
+        emitter.on("client.connect", new WeakDualHandler<AsynchronousObjectSocketChannel, MonitorInfo>(this.clientConnected));
+        emitter.on("client.disconnect", new WeakDualHandler<AsynchronousObjectSocketChannel, MonitorInfo>(this.clientDisconnected));
 
+        this.setConfig();
     }
 
     private void setClientConnected(String hostname, boolean connected) {
@@ -172,25 +183,26 @@ public class MonitorsPresenter implements Initializable {
         });
     }
 
-    private final ConnectionHandler onConnection = (AsynchronousObjectSocketChannel client) -> {
-        client.onDisconnect(new WeakHandler<>(this.onDisconnect));
-        setClientConnected(client.getHostName(), true);
-        client.onMessage(MonitorInfo.class, new WeakDualHandler<>(this.onMonitorInfo));
+    private final DualHandler<AsynchronousObjectSocketChannel, MonitorInfo> clientConnected = (client, monitor) -> {
+        setClientConnected(monitor.getHostName(), true);
     };
 
-    private final ClientMessageHandler<MonitorInfo> onMonitorInfo = (client, m) -> {
-        System.out.println("onMonitorInfo - monitorsPresenter");
-        Platform.runLater(() -> {
-            if (this.getConfig().hasHost(client.getHostName())) {
-                emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, m.getHostName() + monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
-            }
-        });
+    private final DualHandler<AsynchronousObjectSocketChannel, MonitorInfo> clientDisconnected = (client, monitor) -> {
+        setClientConnected(monitor.getHostName(), false);
     };
 
-    private final DisconnectHandler onDisconnect = (AsynchronousObjectSocketChannel client) -> {
-        setClientConnected(client.getHostName(), false);
-    };
-
+    // todo - show reconnected popup balloon - but only implement it in one fucking place
+//    private final ClientMessageHandler<MonitorInfo> onMonitorInfo = (client, m) -> {
+//        System.out.println("onMonitorInfo - monitorsPresenter");
+//        Platform.runLater(() -> {
+//            
+//            MonitorInfo get = this.connectionsService.getClientMap().get(client);
+//            
+//            if (this.getConfig().hasHost(client.getHostName())) {
+//                emitter.emit(TrayMessage.class, new TrayMessage(monitorReconnectBalloonHeader, m.getHostName() + monitorReconnectBalloonText, TrayIcon.MessageType.INFO));
+//            }
+//        });
+//    };
 }
 
 class TableColumnHiderListener implements InvalidationListener {
@@ -200,7 +212,7 @@ class TableColumnHiderListener implements InvalidationListener {
     public TableColumnHiderListener(TableView tableView) {
         this.tableView = tableView;
     }
-            
+
     public void invalidated(Observable n) {
         Pane header = (Pane) tableView.lookup("TableHeaderRow");
         header.setMaxHeight(0);
