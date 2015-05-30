@@ -9,7 +9,7 @@ import com.mystery.libmystery.nio.autojoin.TcpPortScanningAutoJoinClient;
 public class AutoJoin extends TcpPortScanningAutoJoinClient {
 
     public AutoJoin(Callback<NioClient> callback) {
-        super(9934, callback);
+        super(7777, callback);
     }
 
     
