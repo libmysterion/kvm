@@ -18,6 +18,7 @@ public class TransparentWindow {
     private ArrayList<Callback<Point>> moveListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> mousePressListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> mouseReleaseListeners = new ArrayList<>();
+    private ArrayList<Callback<Integer>> mouseScrollListeners = new ArrayList<>();
 
     private ArrayList<Callback<Integer>> keyPressListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> keyReleaseListeners = new ArrayList<>();
@@ -74,14 +75,19 @@ public class TransparentWindow {
 
         scene.setOnMousePressed((e) -> {
             MouseButton button = e.getButton();
-            int val = button == MouseButton.PRIMARY ? 1 : button == MouseButton.SECONDARY ? 2 : button == MouseButton.MIDDLE ? 3 : 4;
+            int val = button == MouseButton.PRIMARY ? 1 : button == MouseButton.SECONDARY ? 3 : button == MouseButton.MIDDLE ? 2 : 4;
             mousePressListeners.forEach((l) -> l.onSuccess(val));
         });
 
         scene.setOnMouseReleased((e) -> {
             MouseButton button = e.getButton();
-            int val = button == MouseButton.PRIMARY ? 1 : button == MouseButton.SECONDARY ? 2 : button == MouseButton.MIDDLE ? 3 : 4;
+            int val = button == MouseButton.PRIMARY ? 1 : button == MouseButton.SECONDARY ? 3 : button == MouseButton.MIDDLE ? 2 : 4;
             mouseReleaseListeners.forEach((l) -> l.onSuccess(val));
+        });
+
+        scene.setOnScroll((e) -> {
+            int val = e.getDeltaY() > 0 ? 1 : -1;
+            mouseScrollListeners.forEach((l) -> l.onSuccess(val));
         });
 
         scene.setOnKeyPressed(this::keyPressed);
@@ -98,18 +104,21 @@ public class TransparentWindow {
         keyReleaseListeners.forEach((x) -> x.onSuccess(code));
     }
 
-    private void keyPressed(KeyEvent e) { 
-       int code = e.getCode().impl_getCode();   // this is probab;y about to stop working
-       keyPressListeners.forEach((x) -> x.onSuccess(code));
+    private void keyPressed(KeyEvent e) {
+        int code = e.getCode().impl_getCode();   // this is probab;y about to stop working
+        keyPressListeners.forEach((x) -> x.onSuccess(code));
     }
 
-        
     public void addMouseMoveListener(Callback<Point> cb) {
         this.moveListeners.add(cb);
     }
 
     public void addMousePressListener(Callback<Integer> cb) {
         this.mousePressListeners.add(cb);
+    }
+    
+    public void addMouseScrollListener(Callback<Integer> cb) {
+        this.mouseScrollListeners.add(cb);
     }
 
     public void addMouseReleaseListener(Callback<Integer> cb) {
