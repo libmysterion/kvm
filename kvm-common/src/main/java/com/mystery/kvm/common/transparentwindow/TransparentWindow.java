@@ -86,7 +86,7 @@ public class TransparentWindow {
         });
 
         scene.setOnScroll((e) -> {
-            int val = e.getDeltaY() > 0 ? 1 : -1;
+            int val = e.getDeltaY() < 0 ? 1 : -1;
             mouseScrollListeners.forEach((l) -> l.onSuccess(val));
         });
 
