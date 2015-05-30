@@ -7,6 +7,7 @@ import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.common.messages.MouseMove;
 import com.mystery.kvm.common.messages.MousePress;
 import com.mystery.kvm.common.messages.MouseRelease;
+import com.mystery.kvm.common.messages.MouseWheel;
 import com.mystery.kvm.common.transparentwindow.TransparentWindow;
 import com.mystery.libmystery.nio.Callback;
 import com.mystery.libmystery.nio.NioClient;
@@ -62,6 +63,16 @@ public class MainApp extends Application {
             try {
                 Robot r = new Robot();
                 r.mouseMove(msg.getX(), msg.getY());
+            } catch (AWTException ex) {
+                ex.printStackTrace();
+            }
+        });
+        
+         nioClient.onMessage(MouseWheel.class, (msg) -> {
+
+            try {
+                Robot r = new Robot();
+                r.mouseWheel(msg.getAmount());
             } catch (AWTException ex) {
                 ex.printStackTrace();
             }
