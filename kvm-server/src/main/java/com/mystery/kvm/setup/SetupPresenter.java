@@ -45,17 +45,13 @@ public class SetupPresenter implements Initializable{
         hBox.getChildren().add(monitorsView.getRootNode());
         hBox.getChildren().add(connectionsView.getRootNode());
         
-        startButton.setOnAction(new WeakEventHandler<>(this.startButtonClicked));
+        startButton.setOnAction((e) -> stage.hide());
            
         emitter.on("stage.hide", new WeakHandler<>(this.onStageHide));
     }
     
     private final Handler<Void> onStageHide = (v) -> {
         new GarbageCollectTask(500).start(); // i want to get all the presenters collected so I can see them remove their listeners from the server
-    };
-
-    private EventHandler<ActionEvent> startButtonClicked = (ActionEvent event) -> {
-        stage.hide();
     };
 
 }

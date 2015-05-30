@@ -63,7 +63,7 @@ public class ConnectionsPresenter implements Initializable {
     public void initialize(URL url, ResourceBundle bundle) {
 
         listView.setItems(availableMonitors);
-        listView.setCellFactory((e) -> new ConnectionsListCell(availableMonitors, server));
+        listView.setCellFactory((e) -> new ConnectionsListCell(availableMonitors, connectionsService));
 
         listView.setOnDragOver(new WeakEventHandler<>(this.onDragOver));
         listView.setOnDragDropped(new WeakEventHandler<>(this.onDragDropped));

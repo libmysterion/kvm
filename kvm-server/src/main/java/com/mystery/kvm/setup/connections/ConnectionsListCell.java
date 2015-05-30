@@ -1,10 +1,15 @@
 package com.mystery.kvm.setup.connections;
 
+import com.mystery.kvm.common.messages.MonitorInfo;
 import com.mystery.kvm.setup.monitors.GridMonitor;
 import com.mystery.kvm.setup.monitors.MonitorTableCell;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.MioServer;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -23,10 +28,10 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
 
     private ObservableList<GridMonitor> availableMonitors; 
     private final ContextMenu menu = new ContextMenu();
-    private final MioServer mioServer; 
+    private ConnectionsService connectionsService;
     
-    ConnectionsListCell( ObservableList<GridMonitor> availableMonitors, MioServer mioServer) {
-        this.mioServer = mioServer;
+    ConnectionsListCell( ObservableList<GridMonitor> availableMonitors, ConnectionsService connectionsService) {
+        this.connectionsService = connectionsService;
         this.availableMonitors = availableMonitors;
         setOnDragDetected(new WeakEventHandler<>(this.onDragDetected));
         setOnDragDone(new WeakEventHandler<>(this.onDragDone));
@@ -91,18 +96,11 @@ public class ConnectionsListCell extends ListCell<GridMonitor> {
         });
     };
     
-    // todo - bug heere ---we need to use the nonitor info to compare hostnames
     private void disconnectClient(GridMonitor item) {
         try {
-            Optional<AsynchronousObjectSocketChannel> optional = mioServer.getClients()
-                    .filter((AsynchronousObjectSocketChannel c) -> c.getHostName().equals(item.getHostname()))
-                    .findFirst();
-            if (optional.isPresent()) {
-                mioServer.disconnectClient(optional.get());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            connectionsService.disconnectClient(item.getHostname());
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
-
 }
