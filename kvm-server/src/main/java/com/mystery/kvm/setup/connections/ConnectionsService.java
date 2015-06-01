@@ -10,6 +10,8 @@ import com.mystery.libmystery.injection.PostConstruct;
 import com.mystery.libmystery.injection.Singleton;
 import com.mystery.libmystery.nio.AsynchronousObjectSocketChannel;
 import com.mystery.libmystery.nio.MioServer;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +40,12 @@ public class ConnectionsService {
     private void initialise() {
         mioServer.onConnection((client) -> {
 
+            try {
+                client.send(new MonitorInfo(0, 0, InetAddress.getLocalHost().getHostName()));
+            } catch (UnknownHostException ex) {
+                //if i connected to something i dont think this can really happpen....
+                ex.printStackTrace();
+            }
             client.onMessage(MonitorInfo.class, (monitorInfo) -> {
                 clientMap.put(client, new ConnectedMonitor(false, monitorInfo));
             });
@@ -56,7 +64,7 @@ public class ConnectionsService {
             });
 
             client.onDisconnect((c) -> {
-                this.eventEmitter.emit("client.disconnect", client, clientMap.get(client));
+                this.eventEmitter.emit("client.disconnect", client, clientMap.get(client).getMonitorInfo());
                 clientMap.remove(client);
                 // todo dc tray mesages
                 //trayService.showMessage(new TrayMessage(newMonitorBalloonHeader, monitorInfo.getHostName() + newMonitorBalloonText, TrayIcon.MessageType.INFO));
@@ -101,7 +109,7 @@ public class ConnectionsService {
             AsynchronousObjectSocketChannel client = entry.getKey();
             MonitorInfo value = entry.getValue().getMonitorInfo();
             if (value.getHostName().equals(hostname)) {
-                client.send(new DisconnectClient());                
+                client.send(new DisconnectClient());
                 this.eventEmitter.emit("client.disconnect", client, clientMap.get(client).getMonitorInfo());
                 return;
             }
