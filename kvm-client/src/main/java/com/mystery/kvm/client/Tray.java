@@ -100,22 +100,24 @@ public class Tray {
     private PopupMenu buildMenuForClient(KVMClient client) {
         PopupMenu menu = new PopupMenu(client.getMonitorInfo().getHostName());
         MenuItem connectItem = new MenuItem("Connect");
-        connectItem.setEnabled(activeServer == client);
+        connectItem.setEnabled(activeServer != client);
         connectItem.addActionListener((e) -> {
             synchronized (lock) {
                 if (activeServer != client) {
 
-                    PopupMenu prevActivePopup = this.clientMenuMap.get(activeServer);
-                    MenuItem activeConnectItem = getConnectItem(prevActivePopup);
-                    activeConnectItem.setEnabled(true);
-                    // todo set the font to non-bold on prev active guy
-
-                    this.activeServer.disconnectFromServer();
+                    if (activeServer != null) {
+                        PopupMenu prevActivePopup = this.clientMenuMap.get(activeServer);
+                        MenuItem prevActiveConnectItem = getConnectItem(prevActivePopup);
+                        prevActiveConnectItem.setEnabled(true);
+                        this.activeServer.disconnectFromServer();
+                        // todo set the font to non-bold on prev active guy
+                    }
+                    
                     this.activeServer = client;
                     this.activeServer.connectToServer();
 
                     PopupMenu activePopup = this.clientMenuMap.get(activeServer);
-                    activeConnectItem = getConnectItem(activePopup);
+                    MenuItem activeConnectItem = getConnectItem(activePopup);
                     activeConnectItem.setEnabled(false);
 
                     autoConnectOverride = true;
@@ -169,17 +171,23 @@ public class Tray {
             PopupMenu menuForClient = buildMenuForClient(client);
             this.clientMenuMap.put(client, menuForClient);
             if (mainPopupMenu.getItemCount() == 1) {  // if we only have the exit item
-                mainPopupMenu.addSeparator();   // then add the separator
+                mainPopupMenu.insertSeparator(0);   // then add the separator
             }
-            mainPopupMenu.add(menuForClient); // new clients appear at top of menu
+            mainPopupMenu.insert(menuForClient, 0);
         }
     }
 
-    // this is called when server does actual disconnect
+    // this is called when server does actually disconnect
     void removeClient(KVMClient client) {
         PopupMenu clientMenu = this.clientMenuMap.get(client);
+        clientMenu.removeAll(); // need to remove childs or the JVM crashes
         this.mainPopupMenu.remove(clientMenu);
         this.clientMenuMap.remove(client);
+        
+        if(mainPopupMenu.getItemCount() == 2){ // if we only have the exit item and the separator
+            mainPopupMenu.remove(0);// then remove the separator
+        }
+        
         if (this.activeServer == client) {
             this.activeServer = null;
         }
