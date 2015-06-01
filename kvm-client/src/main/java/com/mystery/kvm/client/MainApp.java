@@ -1,24 +1,8 @@
 package com.mystery.kvm.client;
 
-import com.mystery.kvm.common.messages.ControlTransition;
-import com.mystery.kvm.common.messages.KeyPress;
-import com.mystery.kvm.common.messages.KeyRelease;
-import com.mystery.kvm.common.messages.MonitorInfo;
-import com.mystery.kvm.common.messages.MouseMove;
-import com.mystery.kvm.common.messages.MousePress;
-import com.mystery.kvm.common.messages.MouseRelease;
-import com.mystery.kvm.common.messages.MouseWheel;
-import com.mystery.kvm.common.transparentwindow.TransparentWindow;
 import com.mystery.libmystery.nio.Callback;
 import com.mystery.libmystery.nio.NioClient;
-import java.awt.AWTException;
-import java.awt.Dimension;
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.event.InputEvent;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.stage.Stage;
@@ -26,124 +10,12 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
 
     private Tray tray;
-    private AutoJoin autojoin;
-    private TransparentWindow transparentWindow;
-
-    private Callback<NioClient> attachClient = (nioClient) -> {
-
-        tray.setClient(nioClient);
-
-        //NioClient nioClient = new NioClient();
-        //nioClient.connect("127.0.0.1", 7777).onSucess(()->{
-        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
-
-        try {
-            nioClient.send(new MonitorInfo(size.width, size.height, InetAddress.getLocalHost().getHostName()));
-        } catch (UnknownHostException ex) {
-            //if i connected to something i dont think this can really happpen....
-            ex.printStackTrace();
-        }
-
-        nioClient.onMessage(ControlTransition.class, (msg) -> {
-            if (!msg.isActive()) {
-                if (transparentWindow == null) {
-                    transparentWindow = new TransparentWindow();
-                    transparentWindow.show();
-                }
-            } else {
-                if (transparentWindow != null) {
-                    transparentWindow.hide();
-                    transparentWindow = null;
-                }
-            }
-        });
-
-        nioClient.onMessage(MouseMove.class, (msg) -> {
-
-            try {
-                Robot r = new Robot();
-                r.mouseMove(msg.getX(), msg.getY());
-            } catch (AWTException ex) {
-                ex.printStackTrace();
-            }
-        });
-        
-         nioClient.onMessage(MouseWheel.class, (msg) -> {
-
-            try {
-                Robot r = new Robot();
-                r.mouseWheel(msg.getAmount());
-            } catch (AWTException ex) {
-                ex.printStackTrace();
-            }
-        });
-
-        nioClient.onMessage(MousePress.class, (msg) -> {
-
-            try {
-                Robot r = new Robot();
-                switch (msg.getButton()) {
-                    case 1:
-                        r.mousePress(InputEvent.BUTTON1_MASK);  // == javafx primary
-                        break;
-                    case 2:
-                        r.mousePress(InputEvent.BUTTON2_MASK);  // = javafx secondary
-                        break;
-                    case 3:
-                        r.mousePress(InputEvent.BUTTON3_MASK);  // == javafx middle
-                    }
-            } catch (AWTException ex) {
-                ex.printStackTrace();
-            }
-        });
-
-        nioClient.onMessage(MouseRelease.class, (msg) -> {
-            try {
-                Robot r = new Robot();
-                switch (msg.getButton()) {
-                    case 1:
-                        r.mouseRelease(InputEvent.BUTTON1_MASK);  // == javafx primary
-                        break;
-                    case 2:
-                        r.mouseRelease(InputEvent.BUTTON2_MASK);  // = javafx secondary
-                        break;
-                    case 3:
-                        r.mouseRelease(InputEvent.BUTTON3_MASK);  // == javafx middle
-                    }
-            } catch (AWTException ex) {
-                ex.printStackTrace();
-            }
-        });
-
-        nioClient.onMessage(KeyPress.class, (msg) -> {
-            try {
-                Robot r = new Robot();
-                r.keyPress(msg.getKeycode());
-            } catch (AWTException ex) {
-                ex.printStackTrace();
-            }
-        });
-
-        nioClient.onMessage(KeyRelease.class, (msg) -> {
-            try {
-                Robot r = new Robot();
-                r.keyRelease(msg.getKeycode());
-            } catch (AWTException ex) {
-                ex.printStackTrace();
-            }
-        });
-
-        nioClient.onDisconnect((c) -> {
-            if (transparentWindow != null) {
-                transparentWindow.hide();
-            }
-            startAutoJoin();
-        });
-
-    };
+    private AutoJoin autojoin;   
+    
+    private Callback<NioClient> attachClient = (nioClient) -> new KVMClient(nioClient, tray);
+    
 
     private void startAutoJoin() {
-
         if (autojoin == null) {
             autojoin = new AutoJoin(attachClient);
             tray.setAutoJoin(autojoin);
@@ -158,8 +30,14 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        tray = new Tray();
+
+     
+        ClientConfig config = new ClientConfig();   // auto loads if existing
+        
+        tray = new Tray(config);
+        
         tray.addAppToTray();
+
         startAutoJoin();
     }
 
