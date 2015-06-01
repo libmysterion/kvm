@@ -113,11 +113,9 @@ public class KVMServer {
     }
 
     private void doTransition(int x, int y, int px, int py) {
-        System.out.println("doTransition");
         Monitor nextMonitor = this.setup.findFromCurrent(x, y);
         if (nextMonitor != null && nextMonitor.isConnected()) {
-            System.out.println("Moved monitor");
-
+           
             this.messager.deactivate(this.activeMonitor.getHostname());
             this.activeMonitor.setActive(false);
 
