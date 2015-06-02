@@ -4,3 +4,4 @@
 /kvm-server/testMonitorfile
 /kvm-server/monitors_setup
 /nb-configuration.xml
+/kvm-client/config
