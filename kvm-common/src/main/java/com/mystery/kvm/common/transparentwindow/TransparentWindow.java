@@ -12,9 +12,12 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TransparentWindow {
 
+    private final static Logger log = LoggerFactory.getLogger(TransparentWindow.class);
     private ArrayList<Callback<Point>> moveListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> mousePressListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> mouseReleaseListeners = new ArrayList<>();
@@ -45,6 +48,8 @@ public class TransparentWindow {
     }
 
     public void hide() {
+        log.debug("Hiding Transparent Window");
+        
         KeyHook.unblockWindowsKey();
         Platform.runLater(() -> {
             undecoratedStage.hide();
