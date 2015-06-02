@@ -82,6 +82,9 @@ public class App extends Application {
     // so i could setup like | dual-1 | guest | dual-2 |
     // and i would need to know when the user is going between monitors and have all the screen sizes
     // but should be sort of the same as what we got 
+    // client to be able to control mouse in session
+    // setting on server for client input allowed
+    // 
     private MioServer server;
 
     private Stage primaryStage;
