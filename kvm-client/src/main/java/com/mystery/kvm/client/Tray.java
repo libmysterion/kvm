@@ -208,6 +208,7 @@ public class Tray {
         MenuItem exitItem = new MenuItem("Exit");
         exitItem.addActionListener(event -> {
             systemTray.remove(trayIcon);
+            Platform.exit();
             clientMenuMap.forEach((kvm, menu) -> kvm.close());
             if (autojoin != null) {
                 autojoin.stop();

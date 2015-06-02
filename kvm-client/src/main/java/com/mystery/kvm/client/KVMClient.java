@@ -19,9 +19,12 @@ import java.awt.Toolkit;
 import java.awt.event.InputEvent;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KVMClient {
 
+    private static final Logger log = LoggerFactory.getLogger(KVMClient.class);
     private NioClient nioClient;
     private MonitorInfo serverMonitorInfo;
     private Tray tray;
@@ -29,6 +32,7 @@ public class KVMClient {
     private TransparentWindow transparentWindow;
 
     public KVMClient(NioClient nioClient, Tray tray) {
+        log.debug("KVM Client connected");
         this.nioClient = nioClient;
         this.tray = tray;
         attach();
@@ -47,6 +51,7 @@ public class KVMClient {
         }
 
         nioClient.onMessage(ControlTransition.class, (msg) -> {
+            log.debug("onControlTransition");
             if (!msg.isActive()) {
                 if (transparentWindow == null) {
                     transparentWindow = new TransparentWindow();
@@ -136,6 +141,7 @@ public class KVMClient {
         });
 
         nioClient.onMessage(MonitorInfo.class, (monitorInfo) -> {
+            log.debug("Received MonitorInfo");
             serverMonitorInfo = monitorInfo;
             tray.addClient(this);
         });

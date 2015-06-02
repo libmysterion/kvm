@@ -5,6 +5,7 @@ import com.mystery.libmystery.nio.NioClient;
 import java.io.IOException;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 
 public class MainApp extends Application {
@@ -31,6 +32,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
+        Platform.setImplicitExit(false);
      
         ClientConfig config = new ClientConfig();   // auto loads if existing
         
