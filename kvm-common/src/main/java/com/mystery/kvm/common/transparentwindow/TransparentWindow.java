@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -33,10 +34,15 @@ public class TransparentWindow {
         Platform.runLater(() -> {
             try {
                 Stage offSceeenUtilityStage = new Stage(StageStyle.UTILITY);
+                offSceeenUtilityStage.setWidth(0);
+                offSceeenUtilityStage.setHeight(0);
                 offSceeenUtilityStage.setX(Double.MAX_VALUE);
                 offSceeenUtilityStage.setY(Double.MAX_VALUE);
+                
                 undecoratedStage = new Stage(StageStyle.UNDECORATED);
                 undecoratedStage.initOwner(offSceeenUtilityStage);
+                undecoratedStage.initModality(Modality.WINDOW_MODAL);
+                offSceeenUtilityStage.show();
                 start(undecoratedStage);
             } catch (Exception e) {
                 e.printStackTrace();
