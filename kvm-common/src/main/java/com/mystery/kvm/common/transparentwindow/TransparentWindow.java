@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 public class TransparentWindow {
 
     private final static Logger log = LoggerFactory.getLogger(TransparentWindow.class);
+
     private ArrayList<Callback<Point>> moveListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> mousePressListeners = new ArrayList<>();
     private ArrayList<Callback<Integer>> mouseReleaseListeners = new ArrayList<>();
@@ -36,10 +38,15 @@ public class TransparentWindow {
         Platform.runLater(() -> {
             try {
                 Stage offSceeenUtilityStage = new Stage(StageStyle.UTILITY);
+                offSceeenUtilityStage.setWidth(0);
+                offSceeenUtilityStage.setHeight(0);
                 offSceeenUtilityStage.setX(Double.MAX_VALUE);
                 offSceeenUtilityStage.setY(Double.MAX_VALUE);
+
                 undecoratedStage = new Stage(StageStyle.UNDECORATED);
                 undecoratedStage.initOwner(offSceeenUtilityStage);
+                undecoratedStage.initModality(Modality.WINDOW_MODAL);
+                offSceeenUtilityStage.show();
                 start(undecoratedStage);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -49,7 +56,6 @@ public class TransparentWindow {
 
     public void hide() {
         log.debug("Hiding Transparent Window");
-        
         KeyHook.unblockWindowsKey();
         Platform.runLater(() -> {
             undecoratedStage.hide();
@@ -121,7 +127,7 @@ public class TransparentWindow {
     public void addMousePressListener(Callback<Integer> cb) {
         this.mousePressListeners.add(cb);
     }
-    
+
     public void addMouseScrollListener(Callback<Integer> cb) {
         this.mouseScrollListeners.add(cb);
     }
